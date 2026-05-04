@@ -1,0 +1,71 @@
+<% this.title = announcement.id ? '编辑公告' : '新建公告' %>
+<% include header %>
+
+<%
+function fmtDateLocal(ts) {
+  if (!ts) return '';
+  let d = new Date(ts * 1000);
+  // 转成 yyyy-MM-ddTHH:mm 格式给 datetime-local input
+  let pad = (n) => n < 10 ? '0' + n : n;
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+    'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+%>
+
+<div class="padding">
+  <h2><%= announcement.id ? '编辑公告' : '新建公告' %></h2>
+
+  <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['admin', 'announcement', announcement.id, 'edit']) %>">
+    <div class="field">
+      <label>标题</label>
+      <input type="text" name="title" maxlength="120" value="<%= announcement.title || '' %>" placeholder="例如:服务器维护通知" required>
+    </div>
+
+    <div class="two fields">
+      <div class="field">
+        <label>开始时间</label>
+        <input type="datetime-local" name="start_time" value="<%= fmtDateLocal(announcement.start_time) %>" required>
+      </div>
+      <div class="field">
+        <label>结束时间</label>
+        <input type="datetime-local" name="end_time" value="<%= fmtDateLocal(announcement.end_time) %>" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>级别</label>
+      <select name="level" class="ui dropdown">
+        <option value="info" <% if (announcement.level === 'info') { %>selected<% } %>>信息（蓝色）</option>
+        <option value="warning" <% if (announcement.level === 'warning') { %>selected<% } %>>警告（黄色）</option>
+        <option value="important" <% if (announcement.level === 'important') { %>selected<% } %>>重要（红色）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>内容（支持 Markdown）</label>
+      <textarea name="content" rows="10" required><%= announcement.content || '' %></textarea>
+    </div>
+
+    <div class="field">
+      <div class="ui toggle checkbox">
+        <input type="checkbox" name="is_active" <% if (announcement.is_active !== false) { %>checked<% } %>>
+        <label>启用此公告（关闭后即使在生效期内也不会显示）</label>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button type="submit" class="ui primary labeled icon button">
+        <i class="checkmark icon"></i> 保存
+      </button>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['admin', 'announcements']) %>">取消</a>
+    </div>
+  </form>
+
+  <div class="ui divider"></div>
+  <div style="color: #999; font-size: 0.9em;">
+    <i class="info circle icon"></i>
+    用户访问首页时会以弹窗形式显示当前生效的公告。每个公告每位访客（按浏览器记录）在生效期内只弹一次。
+  </div>
+</div>
+
+<% include footer %>

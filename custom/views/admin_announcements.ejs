@@ -1,0 +1,74 @@
+<% this.title = '公告管理' %>
+<% include header %>
+
+<div class="padding">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h2 style="margin: 0;">公告管理</h2>
+    <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['admin', 'announcement', 0, 'edit']) %>">
+      <i class="plus icon"></i> 新建公告
+    </a>
+  </div>
+
+  <% if (announcements.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="info circle icon"></i>
+        暂无公告。点击右上角「新建公告」开始。
+      </div>
+    </div>
+  <% } else { %>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th>标题</th>
+          <th>级别</th>
+          <th>生效时段</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let a of announcements) { %>
+          <tr>
+            <td><b><%= a.title %></b></td>
+            <td>
+              <% if (a.level === 'info') { %>
+                <span class="ui blue tiny label">信息</span>
+              <% } else if (a.level === 'warning') { %>
+                <span class="ui yellow tiny label">警告</span>
+              <% } else if (a.level === 'important') { %>
+                <span class="ui red tiny label">重要</span>
+              <% } %>
+            </td>
+            <td>
+              <%= syzoj.utils.formatDate(a.start_time) %><br>
+              <span style="color: #999;">至 <%= syzoj.utils.formatDate(a.end_time) %></span>
+            </td>
+            <td>
+              <% if (!a.is_active) { %>
+                <span class="ui grey tiny label">已停用</span>
+              <% } else if (a.isLive) { %>
+                <span class="ui green tiny label">生效中</span>
+              <% } else if (now < a.start_time) { %>
+                <span class="ui blue tiny label">未开始</span>
+              <% } else { %>
+                <span class="ui grey tiny label">已过期</span>
+              <% } %>
+            </td>
+            <td>
+              <a class="ui mini button" href="<%= syzoj.utils.makeUrl(['admin', 'announcement', a.id, 'edit']) %>">编辑</a>
+              <a class="ui mini button" href-post="<%= syzoj.utils.makeUrl(['admin', 'announcement', a.id, 'toggle']) %>">
+                <%= a.is_active ? '停用' : '启用' %>
+              </a>
+              <a class="ui mini red button" href-post="<%= syzoj.utils.makeUrl(['admin', 'announcement', a.id, 'delete']) %>"
+                 onclick="return confirm('确定删除此公告吗？此操作不可恢复！');">删除</a>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

@@ -8,6 +8,126 @@
       <a href="<%= syzoj.utils.makeUrl(['admin', 'solutions']) %>" style="margin-left: 8px;">前往审核 →</a>
     </div>
   <% } %>
+  <!-- ============ 公告弹窗容器 ============ -->
+  <div id="announcement-modal-container"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var STORAGE_KEY = 'algobeat_dismissed_announcements';
+
+    function getDismissed() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setDismissed(dict) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dict));
+      } catch (e) {}
+    }
+
+    // 清理已经过期的记录(end_time 已过的公告 id 从 localStorage 中删掉)
+    function cleanExpiredDismissed(announcements) {
+      var dict = getDismissed();
+      var liveIds = {};
+      announcements.forEach(function (a) { liveIds[a.id] = true; });
+      var changed = false;
+      Object.keys(dict).forEach(function (id) {
+        if (!liveIds[id]) {
+          delete dict[id];
+          changed = true;
+        }
+      });
+      if (changed) setDismissed(dict);
+    }
+
+    function levelToColor(level) {
+      if (level === 'important') return 'red';
+      if (level === 'warning') return 'yellow';
+      return 'blue';
+    }
+
+    function levelToIcon(level) {
+      if (level === 'important') return 'exclamation circle';
+      if (level === 'warning') return 'warning sign';
+      return 'info circle';
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+
+    function showAnnouncement(a, onClose) {
+      var color = levelToColor(a.level);
+      var icon = levelToIcon(a.level);
+
+      var html =
+        '<div class="ui ' + color + ' modal announcement-modal" style="margin-top: 0 !important;">' +
+        '  <div class="header" style="display: flex; align-items: center; gap: 10px;">' +
+        '    <i class="' + icon + ' icon"></i>' +
+        '    <span>' + escapeHtml(a.title) + '</span>' +
+        '  </div>' +
+        '  <div class="content scrolling">' +
+        '    <div class="font-content">' + a.contentRendered + '</div>' +
+        '  </div>' +
+        '  <div class="actions" style="display: flex; justify-content: space-between; align-items: center;">' +
+        '    <div class="ui checkbox" style="margin-right: auto;">' +
+        '      <input type="checkbox" id="dontshow-' + a.id + '">' +
+        '      <label for="dontshow-' + a.id + '" style="cursor: pointer;">不再弹出</label>' +
+        '    </div>' +
+        '    <div class="ui ' + color + ' ok button">我已知晓</div>' +
+        '  </div>' +
+        '</div>';
+
+      var $m = $(html);
+      $('#announcement-modal-container').append($m);
+
+      $m.modal({
+        closable: true,
+        onHidden: function () {
+          var dontShow = $m.find('input#dontshow-' + a.id).is(':checked');
+          if (dontShow) {
+            var dict = getDismissed();
+            dict[a.id] = parseInt(new Date().getTime() / 1000);
+            setDismissed(dict);
+          }
+          $m.remove();
+          if (typeof onClose === 'function') onClose();
+        }
+      }).modal('show');
+    }
+
+    function showQueue(list) {
+      if (list.length === 0) return;
+      var head = list.shift();
+      showAnnouncement(head, function () {
+        showQueue(list);
+      });
+    }
+
+    $(function () {
+      $.getJSON('/api/active-announcements', function (data) {
+        if (!data || !data.announcements) return;
+        var all = data.announcements;
+        cleanExpiredDismissed(all);
+
+        var dict = getDismissed();
+        var toShow = all.filter(function (a) { return !dict[a.id]; });
+        if (toShow.length === 0) return;
+
+        showQueue(toShow);
+      });
+    });
+  })();
+  </script>
   <div class="ui three column grid">
     <div class="eleven wide column">
       <h4 class="ui top attached block header"><i class="ui info icon"></i>公告</h4>

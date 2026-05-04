@@ -43,6 +43,11 @@ services:
       - ./custom/models-built/problem-solution-comment.js:/app/models-built/problem-solution-comment.js:ro
       - ./custom/models/problem-solution-comment.ts:/app/models/problem-solution-comment.ts:ro
       - ./custom/views/index.ejs:/app/views/index.ejs:ro
+      - ./custom/models-built/announcement.js:/app/models-built/announcement.js:ro
+      - ./custom/models/announcement.ts:/app/models/announcement.ts:ro
+      - ./custom/modules/announcement.js:/app/modules/announcement.js:ro
+      - ./custom/views/admin_announcements.ejs:/app/views/admin_announcements.ejs:ro
+      - ./custom/views/admin_announcement_edit.ejs:/app/views/admin_announcement_edit.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

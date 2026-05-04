@@ -1,0 +1,92 @@
+<% this.title = '与 ' + partner.username + ' 的对话' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['messages']) %>"><i class="envelope icon"></i> 站内信</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">与 <%= partner.username %> 的对话</div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h3 style="margin: 0;">
+      <a href="<%= syzoj.utils.makeUrl(['user', partner.id]) %>" style="color: inherit;">
+        <%= partner.username %>
+      </a>
+      <span style="color: #999; font-weight: normal; font-size: 0.7em;">UID #<%= partner.id %></span>
+    </h3>
+    <div>
+      <a class="ui mini red button"
+         href-post="<%= syzoj.utils.makeUrl(['messages', 'with', partner.id, 'delete-all']) %>"
+         onclick="return confirm('确定删除整个对话历史吗？(对方仍能看到自己的副本)');">
+        清空对话
+      </a>
+    </div>
+  </div>
+
+  <% if (messages.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="comment outline icon"></i>
+        还没有消息。在下方发送第一条消息开始聊天。
+      </div>
+    </div>
+  <% } else { %>
+    <div class="ui segment" style="background: #fafafa; max-height: 600px; overflow-y: auto;">
+      <% for (let m of messages) { %>
+        <div style="display: flex; <% if (m.is_self) { %>justify-content: flex-end;<% } %> margin-bottom: 12px; align-items: flex-start;">
+          <% if (!m.is_self) { %>
+            <img src="<%= syzoj.utils.gravatar(partner.email, 80) %>"
+                 style="width: 36px; height: 36px; border-radius: 50%; margin-right: 8px; object-fit: cover; flex-shrink: 0;">
+          <% } %>
+          <div style="max-width: 70%;">
+            <div style="
+              padding: 8px 12px;
+              border-radius: 12px;
+              background: <%= m.is_self ? '#1678c2' : '#e8e8e8' %>;
+              color: <%= m.is_self ? '#fff' : '#333' %>;
+              word-wrap: break-word;
+              line-height: 1.5;
+            ">
+              <%- m.contentRendered %>
+            </div>
+            <div style="font-size: 0.75em; color: #999; margin-top: 4px; <% if (m.is_self) { %>text-align: right;<% } %>">
+              <%= syzoj.utils.formatDate(m.public_time) %>
+              <% if (m.is_self) { %>
+                · <a href-post="<%= syzoj.utils.makeUrl(['messages', m.id, 'delete']) %>"
+                     onclick="return confirm('确定删除这条消息吗？');"
+                     style="color: #999;">删除</a>
+              <% } %>
+            </div>
+          </div>
+          <% if (m.is_self) { %>
+            <img src="<%= syzoj.utils.gravatar(user.email, 80) %>"
+                 style="width: 36px; height: 36px; border-radius: 50%; margin-left: 8px; object-fit: cover; flex-shrink: 0;">
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+
+  <!-- 回复区 -->
+  <% if (canReply) { %>
+    <form class="ui form" method="post"
+          action="<%= syzoj.utils.makeUrl(['messages', 'with', partner.id, 'send']) %>"
+          style="margin-top: 15px;">
+      <div class="field">
+        <textarea name="content" rows="4" placeholder="回复 <%= partner.username %>(支持 Markdown,最多 5000 字)..." required></textarea>
+      </div>
+      <div style="text-align: right;">
+        <button type="submit" class="ui primary labeled icon button">
+          <i class="send icon"></i> 发送
+        </button>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="ui warning message" style="margin-top: 15px;">
+      <i class="ban icon"></i> <%= cannotReplyReason || '无法回复对方。' %>
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

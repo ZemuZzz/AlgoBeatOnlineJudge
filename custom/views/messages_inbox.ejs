@@ -1,0 +1,59 @@
+<% this.title = '站内信' %>
+<% include header %>
+
+<div class="padding">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;"><i class="envelope icon"></i> 站内信</h2>
+    <div>
+      <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['messages', 'new']) %>">
+        <i class="edit icon"></i> 发起新对话
+      </a>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['messages', 'settings']) %>">
+        <i class="cog icon"></i> 设置
+      </a>
+    </div>
+  </div>
+
+  <% if (conversations.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="inbox icon"></i>
+        暂无对话
+      </div>
+      <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['messages', 'new']) %>">
+        发起新对话
+      </a>
+    </div>
+  <% } else { %>
+    <div style="margin-top: 0;">
+      <% for (let c of conversations) { %>
+        <div style="padding: 14px 8px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+          <img src="<%= syzoj.utils.gravatar(c.partner.email, 80) %>"
+               style="border-radius: 50%; width: 48px; height: 48px; object-fit: cover; flex-shrink: 0;">
+          <div style="margin-left: 14px; flex: 1; min-width: 0;">
+            <a href="<%= syzoj.utils.makeUrl(['messages', 'with', c.partner.id]) %>" style="font-size: 1.1em; font-weight: bold;">
+              <%= c.partner.username %>
+              <% if (c.unread > 0) { %>
+                <span class="ui red label" style="margin-left: 6px;"><%= c.unread %> 未读</span>
+              <% } %>
+            </a>
+            <div style="color: #888; font-size: 0.85em; margin: 4px 0;">
+              <%= syzoj.utils.formatDate(c.last_time) %>
+            </div>
+            <div style="color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <% if (c.last_message) { %>
+                <% let preview = (c.last_message.content || '').replace(/\n/g, ' ').substring(0, 80); %>
+                <% if (c.last_message.sender_id === user.id) { %>
+                  <span style="color: #999;">我:</span>
+                <% } %>
+                <%= preview %><% if ((c.last_message.content || '').length > 80) { %>...<% } %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

@@ -1,0 +1,127 @@
+# Components:
+# - SYZOJ Web
+# - MariaDB
+# - Redis
+# - SYZOJ Judge
+# - RabbitMQ
+#
+# Recommended for:
+# - Web on self-hosted machine or VPS
+# - Judge on the same host
+#
+# Notes:
+# - MariaDB root password is empty (but root login only permitted inside container)
+# - Redis and RabbitMQ persistent are not enabled
+# - Only one runner is configured in this configuration, but you can copy and replace 1 to 2 to add more
+services:
+  web:
+    image: menci/syzoj-web
+    restart: unless-stopped
+    ports:
+      - "4567:80"
+    tmpfs:
+      - /app/sessions
+    volumes:
+      - config:/app/config
+      - uploads:/app/uploads
+      - ./custom/favicon.png:/app/static/self/favicon.png:ro
+      - ./custom/header.ejs:/app/views/header.ejs:ro
+      - ./custom/views/tags.ejs:/app/views/tags.ejs:ro
+      - ./custom/modules/tags.js:/app/modules/tags.js:ro
+      - ./custom/models/problem-solution.ts:/app/models/problem-solution.ts:ro
+      - ./custom/models-built/problem-solution.js:/app/models-built/problem-solution.js:ro
+      - ./custom/modules/solution.js:/app/modules/solution.js:ro
+      - ./custom/views/solutions.ejs:/app/views/solutions.ejs:ro
+      - ./custom/views/solution.ejs:/app/views/solution.ejs:ro
+      - ./custom/views/solution_edit.ejs:/app/views/solution_edit.ejs:ro
+      - ./custom/views/problem.ejs:/app/views/problem.ejs:ro
+      - ./custom/views/admin_solutions.ejs:/app/views/admin_solutions.ejs:ro
+      - ./custom/modules/_user_privilege_loader.js:/app/modules/_user_privilege_loader.js:ro
+      - ./custom/logo.png:/app/static/self/logo.png:ro
+      - ./custom/views/footer.ejs:/app/views/footer.ejs:ro
+    env_file: env-app
+    environment:
+      - TZ=Asia/Shanghai
+      - SYZOJ_WEB_LISTEN_HOSTNAME=0.0.0.0
+      - SYZOJ_WEB_LISTEN_PORT=80
+      - SYZOJ_WEB_DB_HOST=mariadb
+      - SYZOJ_WEB_DB_DATABASE=syzoj
+      - SYZOJ_WEB_DB_USERNAME=syzoj
+      - SYZOJ_WEB_DB_PASSWORD=syzoj
+  mariadb:
+    image: mariadb
+    restart: unless-stopped
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_ROOT_HOST=localhost
+      - MYSQL_DATABASE=syzoj
+      - MYSQL_USER=syzoj
+      - MYSQL_PASSWORD=syzoj
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      start_period: 10s
+      interval: 5s
+      timeout: 30s
+      retries: 5
+  redis:
+    image: redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      start_period: 10s
+      interval: 5s
+      timeout: 1s
+      retries: 5
+  judge-daemon:
+    image: menci/syzoj-judge
+    restart: unless-stopped
+    volumes:
+      - config:/app/config
+      - uploads:/app/testdata
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    env_file: env-app # For SYZOJ_WEB_SECRET_JUDGE
+    environment:
+      - TZ=Asia/Shanghai
+      - SYZOJ_JUDGE_WEB_URL=http://web
+      - SYZOJ_JUDGE_RABBITMQ_URI=amqp://rabbitmq/
+      - SYZOJ_JUDGE_TESTDATA_PATH=/app/testdata/testdata # "uploads" is mounted on /app/testdata
+      - SYZOJ_JUDGE_REDIS_URI=redis://redis:6379
+    command: daemon
+  rabbitmq:
+    image: rabbitmq:3
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      start_period: 10s
+      interval: 5s
+      timeout: 30s
+      retries: 5
+  judge-runner-1:
+    image: menci/syzoj-judge
+    restart: unless-stopped
+    privileged: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - config:/app/config
+      - uploads:/app/testdata
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    environment:
+      - TZ=Asia/Shanghai
+      - SYZOJ_JUDGE_RABBITMQ_URI=amqp://rabbitmq/
+      - SYZOJ_JUDGE_TESTDATA_PATH=/app/testdata/testdata # "uploads" is mounted on /app/testdata
+      - SYZOJ_JUDGE_REDIS_URI=redis://redis:6379
+      - SYZOJ_JUDGE_RUNNER_INSTANCE=1
+      - SYZOJ_JUDGE_CGROUP=judge-runner-1
+    command: runner
+volumes:
+  config:
+  uploads:
+  database:

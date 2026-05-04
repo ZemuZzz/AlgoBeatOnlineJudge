@@ -1,0 +1,39 @@
+<% this.title = '标签' %>
+<% include header %>
+
+<div class="padding">
+  <h2 style="margin-bottom: 20px;">所有标签</h2>
+
+  <% if (tags.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="tags icon"></i>
+        暂无标签
+      </div>
+      <div style="text-align: center; color: #888;">
+        管理员可以前往题目管理界面创建标签。
+      </div>
+    </div>
+  <% } else { %>
+    <div class="ui segment">
+      <p style="color: #666; margin-bottom: 15px;">
+        共 <b><%= tags.length %></b> 个标签。点击任一标签可以查看该标签下的所有题目。
+      </p>
+      <div class="ui divider"></div>
+      <div style="line-height: 2.5em;">
+        <% for (let tag of tags) { %>
+          <a href="<%= syzoj.utils.makeUrl(['problems', 'tag', tag.id]) %>"
+             class="ui <%= tag.color %> label"
+             style="margin: 4px 4px 4px 0;">
+            <%= tag.name %>
+            <% if (tag.problemCount > 0) { %>
+              <div class="detail"><%= tag.problemCount %></div>
+            <% } %>
+          </a>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

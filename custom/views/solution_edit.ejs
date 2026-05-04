@@ -1,0 +1,43 @@
+<% this.title = solution.id ? '编辑题解' : '投稿题解' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>">#<%= problem.id %>. <%= problem.title %></a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solutions']) %>">题解</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section"><%= solution.id ? '编辑' : '投稿' %></div>
+  </div>
+
+  <h2><%= solution.id ? '编辑题解' : '为「' + problem.title + '」投稿题解' %></h2>
+
+  <% if (!solution.id && !user.is_admin) { %>
+    <div class="ui info message">
+      <i class="info circle icon"></i> 投稿后将进入审核状态，管理员通过后才会公开。审核期间仅你自己和管理员可见。
+    </div>
+  <% } %>
+
+  <form class="ui form" action="<%= syzoj.utils.makeUrl(['solution', solution.id, 'edit']) %>" method="post">
+    <input type="hidden" name="problem_id" value="<%= problem.id %>">
+
+    <div class="field">
+      <label>标题</label>
+      <input type="text" name="title" value="<%= solution.title || '' %>" maxlength="80" placeholder="例如：思路分析 + 完整代码" required>
+    </div>
+
+    <div class="field">
+      <label>内容（支持 Markdown）</label>
+      <textarea name="content" rows="20" required><%= solution.content || '' %></textarea>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button type="submit" class="ui primary labeled icon button">
+        <i class="checkmark icon"></i> 提交
+      </button>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solutions']) %>">取消</a>
+    </div>
+  </form>
+</div>
+
+<% include footer %>

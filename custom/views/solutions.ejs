@@ -1,0 +1,83 @@
+<% this.title = problem.title + ' - 题解' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problems']) %>">题库</a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>">#<%= problem.id %>. <%= problem.title %></a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">题解</div>
+  </div>
+
+  <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="margin: 0;">「<%= problem.title %>」的题解</h2>
+    <% if (allowedPost) { %>
+      <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution', 'new']) %>">
+        <i class="edit icon"></i> 投稿题解
+      </a>
+    <% } else { %>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['login'], { url: req.originalUrl }) %>">
+        <i class="sign in icon"></i> 登录后投稿
+      </a>
+    <% } %>
+  </div>
+
+  <% if (solutions.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="file alternate outline icon"></i>
+        暂无题解
+      </div>
+      <% if (allowedPost) { %>
+        <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution', 'new']) %>">
+          成为第一个投稿者
+        </a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th style="width: 50%;">标题</th>
+          <th>作者</th>
+          <th>状态</th>
+          <th>发布时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let sol of solutions) { %>
+          <tr>
+            <td>
+              <a href="<%= syzoj.utils.makeUrl(['solution', sol.id]) %>">
+                <%= sol.title || '(无标题)' %>
+              </a>
+            </td>
+            <td>
+              <% if (sol.user) { %>
+                <a href="<%= syzoj.utils.makeUrl(['user', sol.user.id]) %>"><%= sol.user.username %></a>
+              <% } else { %>
+                <i>已删除</i>
+              <% } %>
+            </td>
+            <td>
+              <% if (sol.status === 'accepted') { %>
+                <span class="ui green tiny label">已通过</span>
+              <% } else if (sol.status === 'pending') { %>
+                <span class="ui yellow tiny label">待审核</span>
+              <% } else if (sol.status === 'rejected') { %>
+                <span class="ui red tiny label">已拒绝</span>
+              <% } else if (sol.status === 'withdrawn') { %>
+                <span class="ui grey tiny label">已撤回</span>
+              <% } %>
+            </td>
+            <td><%= syzoj.utils.formatDate(sol.public_time) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

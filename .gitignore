@@ -1,0 +1,16 @@
+env-app
+*.log
+docker.log
+web-mariadb-redis-judge-rabbitmq/
+*.bak
+*.backup
+*~
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sql
+*.tar.gz
+*.zip

@@ -1,0 +1,10 @@
+# Secrets
+# 这些是 SYZOJ 服务运行所需的密钥。请使用以下命令生成 3 个长随机字符串替换占位符:
+#   openssl rand -hex 32
+#
+# 每个字段必须是不同的随机值。生成后保存为 env-app（去掉 .example 后缀）。
+# 注意:env-app 文件不要提交到任何公开仓库。
+
+SYZOJ_WEB_SECRET_SESSION=请替换为 64 位随机字符串
+SYZOJ_WEB_SECRET_JUDGE=请替换为 64 位随机字符串
+SYZOJ_WEB_SECRET_EMAIL=请替换为 64 位随机字符串

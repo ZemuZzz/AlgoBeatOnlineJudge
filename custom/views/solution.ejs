@@ -1,0 +1,122 @@
+<% this.title = (solution.title || '题解') + ' - ' + problem.title %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problems']) %>">题库</a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>">#<%= problem.id %>. <%= problem.title %></a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solutions']) %>">题解</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section"><%= solution.title %></div>
+  </div>
+
+  <div class="ui segment">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <div>
+        <h2 style="margin: 0 0 8px 0;"><%= solution.title %></h2>
+        <div style="color: #888; font-size: 0.9em;">
+          作者：
+          <% if (solution.user) { %>
+            <a href="<%= syzoj.utils.makeUrl(['user', solution.user.id]) %>"><%= solution.user.username %></a>
+          <% } else { %>
+            <i>已删除</i>
+          <% } %>
+          &nbsp;·&nbsp;
+          发布于 <%= syzoj.utils.formatDate(solution.public_time) %>
+          <% if (solution.update_time && solution.update_time !== solution.public_time) { %>
+            &nbsp;·&nbsp; 最后修改于 <%= syzoj.utils.formatDate(solution.update_time) %>
+          <% } %>
+        </div>
+      </div>
+      <div>
+        <% if (solution.status === 'accepted') { %>
+          <span class="ui green label">已通过</span>
+        <% } else if (solution.status === 'pending') { %>
+          <span class="ui yellow label">待审核</span>
+        <% } else if (solution.status === 'rejected') { %>
+          <span class="ui red label">已拒绝</span>
+        <% } else if (solution.status === 'withdrawn') { %>
+          <span class="ui grey label">已撤回</span>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (solution.status === 'rejected' && solution.reject_reason) { %>
+      <div class="ui red message">
+        <div class="header">审核未通过</div>
+        <p><%= solution.reject_reason %></p>
+      </div>
+    <% } %>
+
+    <% if (solution.status === 'pending') { %>
+      <div class="ui yellow message">
+        <i class="info circle icon"></i> 此题解正在审核中，目前仅作者本人和管理员可见。
+      </div>
+    <% } %>
+
+    <div class="ui divider"></div>
+
+    <div class="article-content">
+      <%- solution.contentRendered %>
+    </div>
+  </div>
+
+  <% if (solution.allowedEdit) { %>
+    <div style="margin-top: 15px;">
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['solution', solution.id, 'edit']) %>">
+        <i class="edit icon"></i> 编辑
+      </a>
+
+      <% if (solution.status !== 'withdrawn' && res.locals.user && solution.user_id === res.locals.user.id) { %>
+        <a class="ui yellow button" href-post="<%= syzoj.utils.makeUrl(['solution', solution.id, 'withdraw']) %>"
+           onclick="return confirm('确定撤回此题解吗？');">
+          <i class="undo icon"></i> 撤回
+        </a>
+      <% } %>
+
+      <a class="ui red button" href-post="<%= syzoj.utils.makeUrl(['solution', solution.id, 'delete']) %>"
+         onclick="return confirm('确定删除此题解吗？此操作不可恢复！');">
+        <i class="trash icon"></i> 删除
+      </a>
+    </div>
+  <% } %>
+  <% if (canReview && solution.status === 'pending') { %>
+    <div class="ui segment" style="margin-top: 15px; background-color: #fffde7;">
+      <h4 style="margin-top: 0;">
+        <i class="gavel icon"></i> 题解审核
+      </h4>
+      <p style="color: #888; margin-bottom: 15px;">
+        此题解处于待审核状态。审核通过后所有用户可见。
+      </p>
+
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <a class="ui green button" href-post="<%= syzoj.utils.makeUrl(['solution', solution.id, 'approve']) %>"
+           onclick="return confirm('确定审核通过这篇题解吗？');">
+          <i class="checkmark icon"></i> 通过
+        </a>
+
+        <form class="ui form" action="<%= syzoj.utils.makeUrl(['solution', solution.id, 'reject']) %>" method="post"
+              style="display: flex; gap: 8px; flex: 1;"
+              onsubmit="return confirm('确定拒绝这篇题解吗？');">
+          <input type="text" name="reason" placeholder="拒绝原因（必填，将展示给作者）" maxlength="255" required style="flex: 1;">
+          <button type="submit" class="ui red button">
+            <i class="times icon"></i> 拒绝
+          </button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (canReview && solution.status === 'rejected') { %>
+    <div style="margin-top: 15px;">
+      <a class="ui green button" href-post="<%= syzoj.utils.makeUrl(['solution', solution.id, 'approve']) %>"
+         onclick="return confirm('改判此题解为已通过？');">
+        <i class="checkmark icon"></i> 改判通过
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

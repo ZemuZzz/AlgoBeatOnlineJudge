@@ -1,0 +1,93 @@
+<% this.title = '题解审核' %>
+<% include header %>
+
+<div class="padding">
+  <h2>题解审核</h2>
+
+  <div class="ui pointing menu" style="margin-bottom: 15px;">
+    <a class="<%= currentStatus === 'pending' ? 'active' : '' %> item"
+       href="<%= syzoj.utils.makeUrl(['admin', 'solutions'], { status: 'pending' }) %>">
+      待审核
+      <% if (counts.pending > 0) { %>
+        <div class="ui yellow circular label"><%= counts.pending %></div>
+      <% } %>
+    </a>
+    <a class="<%= currentStatus === 'accepted' ? 'active' : '' %> item"
+       href="<%= syzoj.utils.makeUrl(['admin', 'solutions'], { status: 'accepted' }) %>">
+      已通过 <span class="ui mini label"><%= counts.accepted %></span>
+    </a>
+    <a class="<%= currentStatus === 'rejected' ? 'active' : '' %> item"
+       href="<%= syzoj.utils.makeUrl(['admin', 'solutions'], { status: 'rejected' }) %>">
+      已拒绝 <span class="ui mini label"><%= counts.rejected %></span>
+    </a>
+    <a class="<%= currentStatus === 'withdrawn' ? 'active' : '' %> item"
+       href="<%= syzoj.utils.makeUrl(['admin', 'solutions'], { status: 'withdrawn' }) %>">
+      已撤回 <span class="ui mini label"><%= counts.withdrawn %></span>
+    </a>
+    <a class="<%= currentStatus === 'all' ? 'active' : '' %> item"
+       href="<%= syzoj.utils.makeUrl(['admin', 'solutions'], { status: 'all' }) %>">
+      全部 <span class="ui mini label"><%= counts.all %></span>
+    </a>
+  </div>
+
+  <% if (solutions.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="check circle outline icon"></i>
+        <% if (currentStatus === 'pending') { %>
+          太棒了！没有需要审核的题解。
+        <% } else { %>
+          此分类下暂无题解。
+        <% } %>
+      </div>
+    </div>
+  <% } else { %>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">标题</th>
+          <th>所属题目</th>
+          <th>作者</th>
+          <th>提交时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let sol of solutions) { %>
+          <tr>
+            <td>
+              <a href="<%= syzoj.utils.makeUrl(['solution', sol.id]) %>" target="_blank">
+                <%= sol.title || '(无标题)' %>
+              </a>
+            </td>
+            <td>
+              <% if (sol.problem) { %>
+                <a href="<%= syzoj.utils.makeUrl(['problem', sol.problem.id]) %>" target="_blank">
+                  #<%= sol.problem.id %>. <%= sol.problem.title %>
+                </a>
+              <% } else { %>
+                <i>题目已删除</i>
+              <% } %>
+            </td>
+            <td>
+              <% if (sol.user) { %>
+                <a href="<%= syzoj.utils.makeUrl(['user', sol.user.id]) %>"><%= sol.user.username %></a>
+              <% } else { %>
+                <i>已删除</i>
+              <% } %>
+            </td>
+            <td><%= syzoj.utils.formatDate(sol.public_time) %></td>
+            <td>
+              <a class="ui mini primary button" href="<%= syzoj.utils.makeUrl(['solution', sol.id]) %>" target="_blank">
+                查看 / 审核
+              </a>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

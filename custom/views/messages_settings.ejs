@@ -1,0 +1,32 @@
+<% this.title = '站内信设置' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['messages']) %>"><i class="envelope icon"></i> 站内信</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">设置</div>
+  </div>
+
+  <h2>站内信设置</h2>
+
+  <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['messages', 'settings']) %>">
+    <div class="field">
+      <div class="ui toggle checkbox">
+        <input type="checkbox" name="disable_messages" <% if (setting.disable_messages) { %>checked<% } %>>
+        <label>关闭站内信功能</label>
+      </div>
+      <div style="color: #888; font-size: 0.9em; margin-top: 8px; padding-left: 36px;">
+        关闭后，其他用户将无法给你发送私信（管理员除外）。已经收到的消息仍可查看。
+      </div>
+    </div>
+
+    <div style="margin-top: 25px;">
+      <button type="submit" class="ui primary labeled icon button">
+        <i class="checkmark icon"></i> 保存设置
+      </button>
+    </div>
+  </form>
+</div>
+
+<% include footer %>

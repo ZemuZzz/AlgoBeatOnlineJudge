@@ -60,17 +60,24 @@
             <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="signal icon"></i> 排名</a>
             <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="comments icon"></i> 讨论</a>
             <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="help circle icon"></i> 帮助</a>
-            <a class="item<% if (active.startsWith('tags')) { %> active<% } %>" href="/tags"><i class="tags icon"></i> 标签</a>
+            <a class="item<% if (active.startsWith('tags')) { %> active<% } %>" href="/tags" style="margin-right: 30px;"><i class="tags icon"></i> 标签</a>
             <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
               <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="arrow left icon"></i> 返回比赛</a>
             <% } %>
             <div class="right menu">
               <% if (user) { %>
+              <a class="item" href="/messages" title="站内信" style="position: relative;">
+                <i class="envelope outline icon" style="margin: 0;"></i>
+                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+                <div class="floating ui red tiny circular label" style="top: 5px; left: 75%; padding: 4px 6px;"><%= unreadMessagesCount %></div>
+                <% } %>
+              </a>
               <a href="<%= syzoj.utils.makeUrl(['user', user.id]) %>" style="color: inherit; ">
               <div class="ui simple dropdown item">
                 <%= user.username %><% if (user.nameplate) { %><%- user.nameplate %><% } %> <i class="dropdown icon"></i>
                 <div class="menu">
                   <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
+                  <a class="item" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
                   <% if (user.is_admin) { %>
                     <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
                     <div class="ui basic modal" id="modal-restart">

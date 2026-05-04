@@ -48,6 +48,21 @@ services:
       - ./custom/modules/announcement.js:/app/modules/announcement.js:ro
       - ./custom/views/admin_announcements.ejs:/app/views/admin_announcements.ejs:ro
       - ./custom/views/admin_announcement_edit.ejs:/app/views/admin_announcement_edit.ejs:ro
+      - ./custom/models-built/private-message.js:/app/models-built/private-message.js:ro
+      - ./custom/models-built/user-message-setting.js:/app/models-built/user-message-setting.js:ro
+      - ./custom/models/private-message.ts:/app/models/private-message.ts:ro
+      - ./custom/models/user-message-setting.ts:/app/models/user-message-setting.ts:ro
+      - ./custom/modules/message.js:/app/modules/message.js:ro
+      - ./custom/views/messages_inbox.ejs:/app/views/messages_inbox.ejs:ro
+      - ./custom/views/messages_conversation.ejs:/app/views/messages_conversation.ejs:ro
+      - ./custom/views/messages_new.ejs:/app/views/messages_new.ejs:ro
+      - ./custom/views/messages_settings.ejs:/app/views/messages_settings.ejs:ro
+      - ./custom/models-built/clipboard-item.js:/app/models-built/clipboard-item.js:ro
+      - ./custom/models/clipboard-item.ts:/app/models/clipboard-item.ts:ro
+      - ./custom/modules/clipboard.js:/app/modules/clipboard.js:ro
+      - ./custom/views/clipboard_list.ejs:/app/views/clipboard_list.ejs:ro
+      - ./custom/views/clipboard_view.ejs:/app/views/clipboard_view.ejs:ro
+      - ./custom/views/clipboard_edit.ejs:/app/views/clipboard_edit.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

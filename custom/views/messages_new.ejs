@@ -1,0 +1,67 @@
+<% this.title = '发起新对话' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['messages']) %>"><i class="envelope icon"></i> 站内信</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">发起新对话</div>
+  </div>
+
+  <h2>发起新对话</h2>
+
+  <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['messages', 'new']) %>">
+    <div class="field">
+      <label>收件人（输入用户名或 UID）</label>
+      <div class="ui search" id="user-search">
+        <div class="ui icon input" style="width: 100%;">
+          <input class="prompt" type="text" name="to" value="<%= prefill %>" placeholder="支持用户名或 UID 数字" autocomplete="off" required style="width: 100%;">
+          <i class="search icon"></i>
+        </div>
+        <div class="results"></div>
+      </div>
+      <div style="color: #888; font-size: 0.85em; margin-top: 4px;">
+        例如:<code>UnratedCheater</code> 或 <code>1</code>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>消息内容（支持 Markdown）</label>
+      <textarea name="content" rows="8" placeholder="第一句你想说的话..." required></textarea>
+    </div>
+
+    <div style="text-align: center;">
+      <button type="submit" class="ui primary labeled icon button">
+        <i class="send icon"></i> 发送
+      </button>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['messages']) %>">取消</a>
+    </div>
+  </form>
+</div>
+
+<script>
+$(function () {
+  $('#user-search').search({
+    apiSettings: {
+      url: '/api/search-user?q={query}',
+      onResponse: function (resp) {
+        var results = (resp && resp.results) || [];
+        return {
+          results: results.map(function (u) {
+            return {
+              title: u.username,
+              description: 'UID #' + u.id
+            };
+          })
+        };
+      }
+    },
+    minCharacters: 1,
+    onSelect: function (result) {
+      $('#user-search input[name="to"]').val(result.title);
+    }
+  });
+});
+</script>
+
+<% include footer %>

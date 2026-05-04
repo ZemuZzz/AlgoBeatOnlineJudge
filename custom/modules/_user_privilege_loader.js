@@ -1,10 +1,10 @@
 // 给每个请求注入用户辅助信息到模板:
 // 1. user.privileges - 权限数组(让 EJS 同步判断权限)
 // 2. res.locals.pendingSolutionsCount - 待审核题解数(仅审核者)
-//
-// 文件名以 _ 开头确保字母排序最前,在所有路由之前注册
+// 3. res.locals.unreadMessagesCount - 未读站内信数(仅登录用户)
 let UserPrivilege = syzoj.model('user_privilege');
 let ProblemSolution = syzoj.model('problem-solution');
+let PrivateMessage = syzoj.model('private-message');
 
 app.use(async (req, res, next) => {
   try {
@@ -27,6 +27,19 @@ app.use(async (req, res, next) => {
     }
   } catch (e) {
     res.locals.pendingSolutionsCount = 0;
+  }
+
+  try {
+    res.locals.unreadMessagesCount = 0;
+    if (res.locals.user) {
+      res.locals.unreadMessagesCount = await PrivateMessage.count({
+        receiver_id: res.locals.user.id,
+        is_read: false,
+        receiver_deleted: false
+      });
+    }
+  } catch (e) {
+    res.locals.unreadMessagesCount = 0;
   }
 
   next();

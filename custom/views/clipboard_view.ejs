@@ -1,0 +1,102 @@
+<% this.title = item.title || '剪贴板' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <% if (typeof viaShareLink !== 'undefined' && viaShareLink) { %>
+      <div class="active section">通过分享链接访问</div>
+    <% } else if (isOwn) { %>
+      <a class="section" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
+      <i class="right angle icon divider"></i>
+      <div class="active section"><%= item.title %></div>
+    <% } else { %>
+      <a class="section" href="<%= syzoj.utils.makeUrl(['clipboard', 'user', owner.id]) %>"><%= owner.username %> 的剪贴板</a>
+      <i class="right angle icon divider"></i>
+      <div class="active section"><%= item.title %></div>
+    <% } %>
+  </div>
+
+  <div class="ui segment">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <div>
+        <h2 style="margin: 0 0 8px 0;"><%= item.title %></h2>
+        <div style="color: #888; font-size: 0.9em;">
+          作者：
+          <% if (owner) { %>
+            <a href="<%= syzoj.utils.makeUrl(['user', owner.id]) %>"><%= owner.username %></a>
+          <% } else { %>
+            <i>已删除</i>
+          <% } %>
+          &nbsp;·&nbsp;
+          更新于 <%= syzoj.utils.formatDate(item.update_time || item.public_time) %>
+        </div>
+      </div>
+      <div>
+        <% if (item.visibility === 'private') { %>
+          <span class="ui grey label"><i class="lock icon"></i>私有</span>
+        <% } else if (item.visibility === 'public') { %>
+          <span class="ui green label"><i class="globe icon"></i>公开</span>
+        <% } else if (item.visibility === 'link') { %>
+          <span class="ui blue label"><i class="linkify icon"></i>分享链接</span>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="ui divider"></div>
+
+    <div class="article-content"><%- item.contentRendered %></div>
+  </div>
+
+  <% if (isOwn) { %>
+    <% if (item.visibility === 'link' && shareUrl) { %>
+      <div class="ui blue message" style="margin-top: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <i class="linkify icon" style="margin: 0;"></i>
+          <span><b>分享链接：</b></span>
+          <input type="text" id="share-url-input" value="<%= shareUrl %>" readonly
+                 style="flex: 1; min-width: 200px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff;">
+          <button onclick="copyShareUrl()" class="ui mini primary button">复制</button>
+          <a class="ui mini button" href-post="<%= syzoj.utils.makeUrl(['clipboard', item.id, 'regenerate-link']) %>"
+             onclick="return confirm('重新生成会让旧链接立刻失效，确定吗？');">
+            重新生成
+          </a>
+        </div>
+        <% if (item.share_expires) { %>
+          <div style="margin-top: 8px; font-size: 0.9em; color: #666;">
+            <i class="clock icon"></i> 此链接将于 <%= syzoj.utils.formatDate(item.share_expires) %> 过期
+          </div>
+        <% } else { %>
+          <div style="margin-top: 8px; font-size: 0.9em; color: #666;">
+            <i class="infinity icon"></i> 此链接永不过期
+          </div>
+        <% } %>
+      </div>
+
+      <script>
+      function copyShareUrl() {
+        var input = document.getElementById('share-url-input');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        try {
+          document.execCommand('copy');
+          alert('链接已复制到剪贴板');
+        } catch (e) {
+          alert('复制失败，请手动复制。');
+        }
+      }
+      </script>
+    <% } %>
+
+    <div style="margin-top: 15px;">
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['clipboard', item.id, 'edit']) %>">
+        <i class="edit icon"></i> 编辑
+      </a>
+      <a class="ui red button" href-post="<%= syzoj.utils.makeUrl(['clipboard', item.id, 'delete']) %>"
+         onclick="return confirm('确定删除此剪贴板吗？此操作不可恢复！');">
+        <i class="trash icon"></i> 删除
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

@@ -1,0 +1,82 @@
+<% this.title = item.id ? '编辑剪贴板' : '新建剪贴板' %>
+<% include header %>
+
+<%
+function expiresToDays(ts) {
+  if (!ts) return 0;
+  var now = parseInt((new Date()).getTime() / 1000);
+  var remaining = ts - now;
+  if (remaining <= 0) return 0;
+  return Math.ceil(remaining / 86400);
+}
+%>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 15px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section"><%= item.id ? '编辑' : '新建' %></div>
+  </div>
+
+  <h2><%= item.id ? '编辑剪贴板' : '新建剪贴板' %></h2>
+
+  <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['clipboard', item.id, 'edit']) %>">
+    <div class="field">
+      <label>标题</label>
+      <input type="text" name="title" maxlength="120" value="<%= item.title || '' %>" placeholder="例如：常用模板代码" required>
+    </div>
+
+    <div class="field">
+      <label>可见性</label>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 6px;">
+        <div class="ui radio checkbox">
+          <input type="radio" name="visibility" value="private" <% if (item.visibility !== 'public' && item.visibility !== 'link') { %>checked<% } %>>
+          <label><i class="lock icon"></i>私有（仅自己可见）</label>
+        </div>
+        <div class="ui radio checkbox">
+          <input type="radio" name="visibility" value="public" <% if (item.visibility === 'public') { %>checked<% } %>>
+          <label><i class="globe icon"></i>公开（出现在我的公开剪贴板列表）</label>
+        </div>
+        <div class="ui radio checkbox">
+          <input type="radio" name="visibility" value="link" <% if (item.visibility === 'link') { %>checked<% } %> id="vis-link">
+          <label><i class="linkify icon"></i>分享链接（凭链接访问）</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="link-options" style="display: <%= item.visibility === 'link' ? 'block' : 'none' %>; padding-left: 20px; border-left: 3px solid #2185d0;">
+      <label>分享链接有效期（天）</label>
+      <input type="number" name="share_days" min="0" max="365" value="<%= expiresToDays(item.share_expires) %>" style="max-width: 150px;">
+      <div style="color: #888; font-size: 0.85em; margin-top: 4px;">
+        填 <code>0</code> 表示永不过期；最长 365 天。保存后会生成一个分享链接。
+      </div>
+    </div>
+
+    <div class="field">
+      <label>内容（支持 Markdown，单条最大 100 KB）</label>
+      <textarea name="content" rows="20" placeholder="支持 Markdown 语法..."><%= item.content || '' %></textarea>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button type="submit" class="ui primary labeled icon button">
+        <i class="checkmark icon"></i> 保存
+      </button>
+      <a class="ui button" href="<%= item.id ? syzoj.utils.makeUrl(['clipboard', item.id]) : syzoj.utils.makeUrl(['clipboard']) %>">取消</a>
+    </div>
+  </form>
+</div>
+
+<script>
+$(function () {
+  function refresh() {
+    var v = $('input[name="visibility"]:checked').val();
+    if (v === 'link') $('#link-options').show();
+    else $('#link-options').hide();
+  }
+  $('.ui.radio.checkbox').checkbox();
+  $('input[name="visibility"]').change(refresh);
+  refresh();
+});
+</script>
+
+<% include footer %>

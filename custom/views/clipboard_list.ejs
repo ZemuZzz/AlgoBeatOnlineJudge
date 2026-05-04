@@ -1,0 +1,77 @@
+<% this.title = isOwn ? '我的剪贴板' : (pageOwner.username + ' 的剪贴板') %>
+<% include header %>
+
+<div class="padding">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">
+      <i class="clipboard outline icon"></i>
+      <% if (isOwn) { %>
+        我的剪贴板
+      <% } else { %>
+        <a href="<%= syzoj.utils.makeUrl(['user', pageOwner.id]) %>" style="color: inherit;"><%= pageOwner.username %></a> 的公开剪贴板
+      <% } %>
+    </h2>
+    <% if (isOwn) { %>
+      <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['clipboard', 0, 'edit']) %>">
+        <i class="plus icon"></i> 新建
+      </a>
+    <% } %>
+  </div>
+
+  <% if (items.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="clipboard outline icon"></i>
+        <% if (isOwn) { %>
+          剪贴板空空如也
+        <% } else { %>
+          该用户暂无公开剪贴板
+        <% } %>
+      </div>
+      <% if (isOwn) { %>
+        <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['clipboard', 0, 'edit']) %>">
+          创建第一条
+        </a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div style="color: #888; margin-bottom: 12px;">
+      共 <b><%= total %></b> 条
+    </div>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th style="width: 55%;">标题</th>
+          <% if (isOwn) { %>
+            <th>可见性</th>
+          <% } %>
+          <th>更新时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let it of items) { %>
+          <tr>
+            <td>
+              <a href="<%= syzoj.utils.makeUrl(['clipboard', it.id]) %>"><%= it.title || '(无标题)' %></a>
+            </td>
+            <% if (isOwn) { %>
+              <td>
+                <% if (it.visibility === 'private') { %>
+                  <span class="ui grey tiny label"><i class="lock icon"></i>私有</span>
+                <% } else if (it.visibility === 'public') { %>
+                  <span class="ui green tiny label"><i class="globe icon"></i>公开</span>
+                <% } else if (it.visibility === 'link') { %>
+                  <span class="ui blue tiny label"><i class="linkify icon"></i>分享链接</span>
+                <% } %>
+              </td>
+            <% } %>
+            <td><%= syzoj.utils.formatDate(it.update_time || it.public_time) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

@@ -8,6 +8,13 @@
       <a href="<%= syzoj.utils.makeUrl(['admin', 'solutions']) %>" style="margin-left: 8px;">前往审核 →</a>
     </div>
   <% } %>
+  <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+    <div class="ui blue message" style="margin-bottom: 15px;">
+      <i class="envelope icon"></i>
+      你有 <b><%= unreadMessagesCount %></b> 条未读站内信。
+      <a href="<%= syzoj.utils.makeUrl(['messages']) %>" style="margin-left: 8px;">前往查看 →</a>
+    </div>
+  <% } %>
   <!-- ============ 公告弹窗容器 ============ -->
   <div id="announcement-modal-container"></div>
 

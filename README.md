@@ -1,6 +1,6 @@
 # AlgoBeat Online Judge
 
-基于 [SYZOJ](https://github.com/syzoj/syzoj) 二次开发的在线评测平台。在原版 SYZOJ 的基础上增加了**标签库浏览**和**题解投稿/审核**两套核心功能。
+基于 [SYZOJ](https://github.com/syzoj/syzoj) 二次开发的在线评测平台。
 
 ## ✨ 主要新特性
 

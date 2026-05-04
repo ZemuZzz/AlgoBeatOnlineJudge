@@ -39,6 +39,7 @@ services:
       - ./custom/modules/_user_privilege_loader.js:/app/modules/_user_privilege_loader.js:ro
       - ./custom/logo.png:/app/static/self/logo.png:ro
       - ./custom/views/footer.ejs:/app/views/footer.ejs:ro
+      - ./custom/web.json:/app/config/web.json
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

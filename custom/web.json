@@ -1,0 +1,24 @@
+{
+  "title": "Algo Beat Contest",
+  "gravatar_url": "https://gravatar.zeruns.tech/avatar",
+  "links": [
+    {
+      "title": "洛谷",
+      "url": "https://www.luogu.com.cn"
+    }
+  ],
+  "default": {
+    "problem": {
+      "memory_limit": 512
+    }
+  },
+  "page": {
+    "problem": 100,
+    "judge_state": 10,
+    "problem_statistics": 10,
+    "ranklist": 100,
+    "discussion": 10,
+    "article_comment": 10,
+    "contest": 10
+  }
+}

@@ -1,4 +1,4 @@
-# AlgoBeatOnlineJudge
+# AlgoBeat Online Judge
 
 基于 [SYZOJ](https://github.com/syzoj/syzoj) 二次开发的在线评测平台。在原版 SYZOJ 的基础上增加了**标签库浏览**和**题解投稿/审核**两套核心功能。
 
@@ -103,29 +103,34 @@
 
 ## 📁 仓库结构
 
-├── docker-compose.yml          # 主部署配置
-├── env-app.example             # 密钥模板（按说明改名为 env-app）
-├── env                         # 项目级环境变量（可选）
-└── custom/                     # 所有自定义代码与资源
-├── header.ejs              # 改造的顶部导航（含标签/审核入口）
-├── favicon.png             # 站点图标
-├── logo.png                # 顶部 logo
-├── views/                  # 自定义 EJS 模板
-│   ├── tags.ejs            # 标签列表页
-│   ├── solutions.ejs       # 题目下题解列表
-│   ├── solution.ejs        # 题解详情
-│   ├── solution_edit.ejs   # 题解编辑
-│   ├── admin_solutions.ejs # 题解审核后台
-│   ├── footer.ejs          # 自定义页脚
-│   └── problem.ejs         # 加题解按钮
-├── modules/                # 自定义路由
-│   ├── _user_privilege_loader.js  # 给模板注入 user.privileges
-│   ├── tags.js                    # 标签列表路由
-│   └── solution.js                # 题解全部路由
-├── models-built/           # 编译后的数据模型
-│   └── problem-solution.js
-└── models/                 # 模型占位文件
-└── problem-solution.ts
+```
+.
+├── docker-compose.yml              # 主部署配置
+├── env-app.example                 # 密钥模板(按说明改名为 env-app)
+├── env                             # 项目级环境变量(可选)
+├── .gitignore
+├── README.md
+└── custom/                         # 所有自定义代码与资源
+    ├── header.ejs                  # 改造的顶部导航(含标签/审核入口)
+    ├── favicon.png                 # 站点图标
+    ├── logo.png                    # 顶部 logo
+    ├── views/                      # 自定义 EJS 模板
+    │   ├── tags.ejs                # 标签列表页
+    │   ├── solutions.ejs           # 题目下题解列表
+    │   ├── solution.ejs            # 题解详情
+    │   ├── solution_edit.ejs       # 题解编辑
+    │   ├── admin_solutions.ejs     # 题解审核后台
+    │   ├── footer.ejs              # 自定义页脚
+    │   └── problem.ejs             # 加题解按钮
+    ├── modules/                    # 自定义路由
+    │   ├── _user_privilege_loader.js   # 给模板注入 user.privileges
+    │   ├── tags.js                     # 标签列表路由
+    │   └── solution.js                 # 题解全部路由
+    ├── models-built/               # 编译后的数据模型
+    │   └── problem-solution.js
+    └── models/                     # 模型占位文件
+        └── problem-solution.ts
+```
 
 ## 🔧 常用维护命令
 

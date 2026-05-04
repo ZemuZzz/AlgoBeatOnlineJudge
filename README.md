@@ -152,7 +152,7 @@ docker exec -it algobeat-mariadb-1 mariadb -u root syzoj
 
 ## 📜 许可
 
-本项目继承 SYZOJ 的 [Apache License 2.0](https://github.com/syzoj/syzoj/blob/master/LICENSE)。
+本项目继承 SYZOJ 的 [MIT License](https://github.com/syzoj/syzoj/blob/master/LICENSE)。
 
 ## 🙏 致谢
 

@@ -63,6 +63,8 @@ services:
       - ./custom/views/clipboard_list.ejs:/app/views/clipboard_list.ejs:ro
       - ./custom/views/clipboard_view.ejs:/app/views/clipboard_view.ejs:ro
       - ./custom/views/clipboard_edit.ejs:/app/views/clipboard_edit.ejs:ro
+      - ./custom/models-built/problem-solution-setting.js:/app/models-built/problem-solution-setting.js:ro
+      - ./custom/models/problem-solution-setting.ts:/app/models/problem-solution-setting.ts:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

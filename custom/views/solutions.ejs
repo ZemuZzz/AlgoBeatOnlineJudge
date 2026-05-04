@@ -10,18 +10,46 @@
     <div class="active section">题解</div>
   </div>
 
-  <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+  <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
     <h2 style="margin: 0;">「<%= problem.title %>」的题解</h2>
-    <% if (allowedPost) { %>
-      <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution', 'new']) %>">
-        <i class="edit icon"></i> 投稿题解
-      </a>
-    <% } else { %>
-      <a class="ui button" href="<%= syzoj.utils.makeUrl(['login'], { url: req.originalUrl }) %>">
-        <i class="sign in icon"></i> 登录后投稿
-      </a>
-    <% } %>
+    <div>
+      <% if (typeof submissionDisabled !== 'undefined' && submissionDisabled) { %>
+        <a class="ui button" href="javascript:alert('该题已关闭题解提交。');"
+           style="background-color: #f8f8f8; color: #999; cursor: not-allowed;">
+          <i class="ban icon"></i> 已关闭投稿
+        </a>
+      <% } else if (allowedPost) { %>
+        <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution', 'new']) %>">
+          <i class="edit icon"></i> 投稿题解
+        </a>
+      <% } else if (!res.locals.user) { %>
+        <a class="ui button" href="<%= syzoj.utils.makeUrl(['login'], { url: req.originalUrl }) %>">
+          <i class="sign in icon"></i> 登录后投稿
+        </a>
+      <% } %>
+
+      <% if (typeof canManageSetting !== 'undefined' && canManageSetting) { %>
+        <% if (submissionDisabled) { %>
+          <a class="ui green button" href-post="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
+             onclick="return confirm('确定重新开放此题的题解提交吗？');">
+            <i class="unlock icon"></i> 开放投稿
+          </a>
+        <% } else { %>
+          <a class="ui yellow button" href-post="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
+             onclick="return confirm('确定关闭此题的题解提交吗？已通过的题解仍然可见，但其他用户不能再投稿。');">
+            <i class="lock icon"></i> 关闭投稿
+          </a>
+        <% } %>
+      <% } %>
+    </div>
   </div>
+
+  <% if (typeof submissionDisabled !== 'undefined' && submissionDisabled) { %>
+    <div class="ui yellow message">
+      <i class="info circle icon"></i>
+      <b>该题已关闭题解投稿。</b>已通过的题解仍可查看和评论；新的题解投稿暂不接受。
+    </div>
+  <% } %>
 
   <% if (solutions.length === 0) { %>
     <div class="ui placeholder segment">

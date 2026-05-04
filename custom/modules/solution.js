@@ -2,6 +2,7 @@ let Problem = syzoj.model('problem');
 let ProblemSolutionComment = syzoj.model('problem-solution-comment');
 let ProblemSolution = syzoj.model('problem-solution');
 let User = syzoj.model('user');
+let ProblemSolutionSetting = syzoj.model('problem-solution-setting');
 
 // ============ 题目下的题解列表 ============
 app.get('/problem/:pid/solutions', async (req, res) => {
@@ -43,14 +44,23 @@ app.get('/problem/:pid/solutions', async (req, res) => {
       sol.allowedEdit = await sol.isAllowedEditBy(res.locals.user);
     }
 
-    // 当前用户能否投稿(登录即可)
-    let allowedPost = !!user;
+    // 检查题目是否禁用了题解投稿
+    let setting = await ProblemSolutionSetting.findOne({ where: { problem_id: pid } });
+    let submissionDisabled = !!(setting && setting.disable_submission);
+
+    let canManageSetting = user && (user.is_admin || (user.privileges && user.privileges.includes('manage_problem')));
+
+    // 当前用户能否投稿(登录 + 没禁用 || 是审核者)
+    // 审核者也无法投稿,但他能看到关闭状态并切换
+    let allowedPost = !!user && !submissionDisabled;
 
     res.render('solutions', {
       problem: problem,
       solutions: solutions,
       paginate: paginate,
-      allowedPost: allowedPost
+      allowedPost: allowedPost,
+      submissionDisabled: submissionDisabled,
+      canManageSetting: canManageSetting
     });
   } catch (e) {
     syzoj.log(e);
@@ -72,6 +82,13 @@ app.get('/problem/:pid/solution/new', async (req, res) => {
     if (!problem) throw new ErrorMessage('无此题目。');
     if (!await problem.isAllowedUseBy(res.locals.user)) {
       throw new ErrorMessage('您没有权限进行此操作。');
+    }
+    // 检查题目是否禁用了题解投稿
+    let setting = await ProblemSolutionSetting.findOne({ where: { problem_id: pid } });
+    if (setting && setting.disable_submission) {
+      throw new ErrorMessage('该题已关闭题解提交。', {
+        '查看现有题解': syzoj.utils.makeUrl(['problem', pid, 'solutions'])
+      });
     }
 
     res.redirect(syzoj.utils.makeUrl(['solution', 0, 'edit'], { pid: pid }));
@@ -154,7 +171,11 @@ app.get('/solution/:id/edit', async (req, res) => {
       if (!await problem.isAllowedUseBy(res.locals.user)) {
         throw new ErrorMessage('您没有权限进行此操作。');
       }
-
+      // 检查题目是否禁用了题解投稿
+      let setting = await ProblemSolutionSetting.findOne({ where: { problem_id: pid } });
+      if (setting && setting.disable_submission) {
+        throw new ErrorMessage('该题已关闭题解提交。');
+      }
       solution = await ProblemSolution.create();
       solution.id = 0;
       solution.problem_id = pid;
@@ -443,6 +464,35 @@ app.post('/solution/:sid/comment/:cid/delete', async (req, res) => {
     if (solution) await solution.resetCommentsNum();
 
     res.redirect(syzoj.utils.makeUrl(['solution', sid]));
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', { err: e });
+  }
+});
+// ============ 审核者:切换题目题解提交开关 ============
+app.post('/problem/:pid/solution-toggle-submission', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。');
+    let canManage = res.locals.user.is_admin || await res.locals.user.hasPrivilege('manage_problem');
+    if (!canManage) throw new ErrorMessage('您没有权限进行此操作。');
+
+    let pid = parseInt(req.params.pid);
+    let problem = await Problem.findById(pid);
+    if (!problem) throw new ErrorMessage('无此题目。');
+
+    let setting = await ProblemSolutionSetting.findOne({ where: { problem_id: pid } });
+    if (!setting) {
+      setting = await ProblemSolutionSetting.create();
+      setting.problem_id = pid;
+      setting.disable_submission = false;
+    }
+
+    setting.disable_submission = !setting.disable_submission;
+    setting.update_time = parseInt((new Date()).getTime() / 1000);
+    setting.updated_by = res.locals.user.id;
+    await setting.save();
+
+    res.redirect(syzoj.utils.makeUrl(['problem', pid, 'solutions']));
   } catch (e) {
     syzoj.log(e);
     res.render('error', { err: e });

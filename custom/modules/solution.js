@@ -1,4 +1,5 @@
 let Problem = syzoj.model('problem');
+let ProblemSolutionComment = syzoj.model('problem-solution-comment');
 let ProblemSolution = syzoj.model('problem-solution');
 let User = syzoj.model('user');
 
@@ -87,7 +88,6 @@ app.get('/solution/:id', async (req, res) => {
     let solution = await ProblemSolution.findById(id);
     if (!solution) throw new ErrorMessage('无此题解。');
 
-    // 权限检查
     if (!(await solution.isAllowedSeeBy(res.locals.user))) {
       throw new ErrorMessage('您没有权限查看此题解。');
     }
@@ -100,14 +100,32 @@ app.get('/solution/:id', async (req, res) => {
 
     solution.user = await User.findById(solution.user_id);
     solution.allowedEdit = await solution.isAllowedEditBy(res.locals.user);
+    solution.allowedComment = solution.isAllowedCommentBy(res.locals.user);
     solution.contentRendered = await syzoj.utils.markdown(solution.content || '');
 
     let canReview = res.locals.user && (res.locals.user.is_admin || await res.locals.user.hasPrivilege('manage_problem'));
 
+    // 加载评论列表
+    let commentsCount = await ProblemSolutionComment.count({ solution_id: solution.id });
+    let pageSize = (syzoj.config.page && syzoj.config.page.article_comment) || 10;
+    let paginate = syzoj.utils.paginate(commentsCount, req.query.page, pageSize);
+    let comments = await ProblemSolutionComment.queryPage(paginate, { solution_id: solution.id }, {
+      public_time: 'DESC'
+    });
+
+    for (let c of comments) {
+      c.user = await User.findById(c.user_id);
+      c.allowedEdit = await c.isAllowedEditBy(res.locals.user);
+      c.contentRendered = await syzoj.utils.markdown(c.content || '');
+    }
+
     res.render('solution', {
       solution: solution,
       problem: problem,
-      canReview: canReview
+      canReview: canReview,
+      comments: comments,
+      commentsCount: commentsCount,
+      paginate: paginate
     });
   } catch (e) {
     syzoj.log(e);
@@ -214,7 +232,7 @@ app.post('/solution/:id/edit', async (req, res) => {
     solution.title = title;
     solution.content = content;
     solution.update_time = parseInt((new Date()).getTime() / 1000);
-
+    solution.allow_comment = req.body.allow_comment === 'on' || req.body.allow_comment === 'true';
     await solution.save();
 
     res.redirect(syzoj.utils.makeUrl(['solution', solution.id]));
@@ -363,6 +381,68 @@ app.post('/solution/:id/reject', async (req, res) => {
     await solution.save();
 
     res.redirect(syzoj.utils.makeUrl(['solution', solution.id]));
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', { err: e });
+  }
+});
+
+// ============ 提交评论 ============
+app.post('/solution/:id/comment', async (req, res) => {
+  try {
+    if (!res.locals.user) {
+      throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+    }
+
+    let id = parseInt(req.params.id);
+    let solution = await ProblemSolution.findById(id);
+    if (!solution) throw new ErrorMessage('无此题解。');
+
+    if (!solution.isAllowedCommentBy(res.locals.user)) {
+      throw new ErrorMessage('您没有权限评论此题解。');
+    }
+
+    let content = (req.body.comment || '').trim();
+    if (!content) throw new ErrorMessage('评论内容不能为空。');
+    if (content.length > 5000) throw new ErrorMessage('评论内容过长(最多 5000 字)。');
+
+    let comment = await ProblemSolutionComment.create({
+      content: content,
+      solution_id: id,
+      user_id: res.locals.user.id,
+      public_time: parseInt((new Date()).getTime() / 1000)
+    });
+    await comment.save();
+
+    await solution.resetCommentsNum();
+
+    res.redirect(syzoj.utils.makeUrl(['solution', id]));
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', { err: e });
+  }
+});
+
+// ============ 删除评论 ============
+app.post('/solution/:sid/comment/:cid/delete', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。');
+
+    let sid = parseInt(req.params.sid);
+    let cid = parseInt(req.params.cid);
+    let comment = await ProblemSolutionComment.findById(cid);
+    if (!comment || comment.solution_id !== sid) throw new ErrorMessage('无此评论。');
+
+    if (!(await comment.isAllowedEditBy(res.locals.user))) {
+      throw new ErrorMessage('您没有权限删除此评论。');
+    }
+
+    await comment.destroy();
+
+    let solution = await ProblemSolution.findById(sid);
+    if (solution) await solution.resetCommentsNum();
+
+    res.redirect(syzoj.utils.makeUrl(['solution', sid]));
   } catch (e) {
     syzoj.log(e);
     res.render('error', { err: e });

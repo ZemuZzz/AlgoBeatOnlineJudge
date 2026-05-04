@@ -30,7 +30,12 @@
       <label>内容（支持 Markdown）</label>
       <textarea name="content" rows="20" required><%= solution.content || '' %></textarea>
     </div>
-
+    <div class="field">
+      <div class="ui toggle checkbox">
+        <input type="checkbox" name="allow_comment" <% if (solution.id === 0 || solution.allow_comment) { %>checked<% } %>>
+        <label>允许其他用户对本题解发表评论</label>
+      </div>
+    </div>
     <div style="text-align: center; margin-top: 20px;">
       <button type="submit" class="ui primary labeled icon button">
         <i class="checkmark icon"></i> 提交

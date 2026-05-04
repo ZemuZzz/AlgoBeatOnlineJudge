@@ -40,6 +40,9 @@ services:
       - ./custom/logo.png:/app/static/self/logo.png:ro
       - ./custom/views/footer.ejs:/app/views/footer.ejs:ro
       - ./custom/web.json:/app/config/web.json
+      - ./custom/models-built/problem-solution-comment.js:/app/models-built/problem-solution-comment.js:ro
+      - ./custom/models/problem-solution-comment.ts:/app/models/problem-solution-comment.ts:ro
+      - ./custom/views/index.ejs:/app/views/index.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

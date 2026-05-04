@@ -53,6 +53,25 @@ var ProblemSolution = /** @class */ (function (_super) {
         if (await user.hasPrivilege('manage_problem')) return true;
         return false;
     };
+    // 重新计算评论数(每次新增/删除评论后调用)
+    ProblemSolution.prototype.resetCommentsNum = async function () {
+        var ProblemSolutionComment = require('./problem-solution-comment').default;
+        this.comments_num = await ProblemSolutionComment.count({ solution_id: this.id });
+        await this.save();
+    };
+
+    // 是否允许某用户评论
+    ProblemSolution.prototype.isAllowedCommentBy = function (user) {
+        if (!user) return false;                     // 未登录不能评论
+        if (this.status !== 'accepted') return false; // 仅已通过的题解可评论
+        if (!this.allow_comment) {                   // 作者关闭了评论
+            // 但作者本人和管理员仍可评论
+            if (user.is_admin) return true;
+            if (this.user_id === user.id) return true;
+            return false;
+        }
+        return true;
+    };
 
     __decorate([
         TypeORM.PrimaryGeneratedColumn(),
@@ -101,7 +120,15 @@ var ProblemSolution = /** @class */ (function (_super) {
         TypeORM.Column({ nullable: true, type: "varchar", length: 255 }),
         __metadata("design:type", String)
     ], ProblemSolution.prototype, "reject_reason");
+    __decorate([
+        TypeORM.Column({ "default": true, type: "boolean" }),
+        __metadata("design:type", Boolean)
+    ], ProblemSolution.prototype, "allow_comment");
 
+    __decorate([
+        TypeORM.Column({ "default": 0, type: "integer" }),
+        __metadata("design:type", Number)
+    ], ProblemSolution.prototype, "comments_num");
     ProblemSolution = __decorate([
         TypeORM.Entity({ name: "problem_solution" })
     ], ProblemSolution);

@@ -118,5 +118,60 @@
     </div>
   <% } %>
 </div>
+<!-- ============ 评论区 ============ -->
+  <div style="margin-top: 20px;" id="comments">
+    <% if (commentsCount > 0) { %>
+      <h3>共 <%= commentsCount %> 条评论</h3>
+      <div class="ui comments" style="max-width: none;">
+        <% for (let c of comments) { %>
+          <div class="comment">
+            <a class="avatar">
+              <img src="<%= syzoj.utils.gravatar(c.user.email, 120) %>">
+            </a>
+            <div class="content">
+              <a class="author" href="<%= syzoj.utils.makeUrl(['user', c.user_id]) %>"><%= c.user.username %></a><% if (c.user.nameplate) { %><%- c.user.nameplate %><% } %>
+              <div class="metadata">
+                <span class="date"><%= syzoj.utils.formatDate(c.public_time) %></span>
+              </div>
+              <div class="text font-content"><%- c.contentRendered %></div>
+              <% if (c.allowedEdit) { %>
+                <div class="actions">
+                  <a href-post="<%= syzoj.utils.makeUrl(['solution', solution.id, 'comment', c.id, 'delete']) %>"
+                     onclick="return confirm('确定删除这条评论吗？');">删除</a>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+      <% include page %>
+    <% } else if (solution.status === 'accepted') { %>
+      <h3>暂无评论</h3>
+    <% } %>
 
+    <% if (solution.allowedComment) { %>
+      <form class="ui reply form" method="post" action="<%= syzoj.utils.makeUrl(['solution', solution.id, 'comment']) %>" style="margin-top: 15px;">
+        <div class="field">
+          <textarea name="comment" placeholder="发表评论(支持 Markdown,最多 5000 字)..." rows="4"></textarea>
+        </div>
+        <div style="text-align: center;">
+          <button type="submit" class="ui labeled submit icon primary button">
+            <i class="icon edit"></i> 发表评论
+          </button>
+        </div>
+      </form>
+    <% } else if (solution.status !== 'accepted') { %>
+      <div class="ui info message" style="margin-top: 15px;">
+        <i class="info circle icon"></i> 题解通过审核后才能评论。
+      </div>
+    <% } else if (!res.locals.user) { %>
+      <div class="ui info message" style="margin-top: 15px;">
+        <a href="<%= syzoj.utils.makeUrl(['login'], { url: req.originalUrl }) %>">登录</a> 后即可评论。
+      </div>
+    <% } else if (!solution.allow_comment) { %>
+      <div class="ui warning message" style="margin-top: 15px;">
+        <i class="ban icon"></i> 作者已关闭此题解的评论。
+      </div>
+    <% } %>
+  </div>
 <% include footer %>

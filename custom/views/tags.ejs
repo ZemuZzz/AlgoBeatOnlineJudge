@@ -1,34 +1,125 @@
 <% this.title = '标签' %>
 <% include header %>
 
-<div class="padding">
-  <h2 style="margin-bottom: 20px;">所有标签</h2>
+<%
+// 分组规则定义
+const KNOWN_COLORS = ['red','orange','yellow','olive','green','teal','blue','violet','purple','pink','black'];
 
-  <% if (tags.length === 0) { %>
-    <div class="ui placeholder segment">
-      <div class="ui icon header">
-        <i class="tags icon"></i>
-        暂无标签
+const GROUPS = [
+  {
+    key: 'source',
+    title: '题目来源',
+    icon: 'flag',
+    description: '标识题目所属的赛事、平台或题库。',
+    match: (tag) => tag.color === 'pink'
+  },
+  {
+    key: 'category',
+    title: '算法大类',
+    icon: 'sitemap',
+    description: '题目涉及的算法大类。',
+    match: (tag) => tag.color === 'teal'
+  },
+  {
+    key: 'algorithm',
+    title: '算法细目',
+    icon: 'cogs',
+    description: '具体的算法或数据结构知识点。',
+    match: (tag) => !KNOWN_COLORS.includes(tag.color)
+  },
+  {
+    key: 'type',
+    title: '题目类型',
+    icon: 'tasks',
+    description: '题目的形式或评测类型。',
+    match: (tag) => tag.color === 'olive'
+  },
+  {
+    key: 'difficulty',
+    title: '题目难度',
+    icon: 'star',
+    description: '题目难度分级。颜色由浅到深表示难度递增。',
+    match: (tag) => ['red','orange','yellow','green','blue','purple','black'].includes(tag.color),
+    // 难度按预设颜色顺序排序
+    sortOrder: ['red','orange','yellow','green','blue','purple','black']
+  }
+];
+
+// 给每个分组分配标签
+const grouped = GROUPS.map(g => ({ ...g, items: [] }));
+const orphans = []; // 没匹配到任何分组的(理论上不会有,但保险起见)
+
+for (const tag of tags) {
+  let matched = false;
+  for (const g of grouped) {
+    if (g.match(tag)) {
+      g.items.push(tag);
+      matched = true;
+      break;
+    }
+  }
+  if (!matched) orphans.push(tag);
+}
+
+// 难度分组按指定颜色顺序排
+const diffGroup = grouped.find(g => g.key === 'difficulty');
+if (diffGroup && diffGroup.sortOrder) {
+  diffGroup.items.sort((a, b) => {
+    const ai = diffGroup.sortOrder.indexOf(a.color);
+    const bi = diffGroup.sortOrder.indexOf(b.color);
+    if (ai !== bi) return ai - bi;
+    return (a.name || '') > (b.name || '') ? 1 : -1;
+  });
+}
+%>
+
+<div class="padding">
+  <h2 style="margin-bottom: 5px;">所有标签</h2>
+  <div style="color: #888; margin-bottom: 25px;">
+    共 <b><%= tags.length %></b> 个标签，按用途分为 <b><%= GROUPS.length %></b> 类。点击任一标签可查看该标签下的题目。
+  </div>
+
+  <% for (const g of grouped) { %>
+    <% if (g.items.length === 0) continue; %>
+    <div class="ui segment" style="margin-bottom: 18px;">
+      <h3 style="margin-top: 0; margin-bottom: 5px;">
+        <i class="<%= g.icon %> icon"></i><%= g.title %>
+        <span style="font-weight: normal; color: #888; font-size: 0.7em; margin-left: 6px;">
+          <%= g.items.length %> 项
+        </span>
+      </h3>
+      <div style="color: #999; font-size: 0.9em; margin-bottom: 12px;">
+        <%= g.description %>
       </div>
-      <div style="text-align: center; color: #888;">
-        管理员可以前往题目管理界面创建标签。
-      </div>
-    </div>
-  <% } else { %>
-    <div class="ui segment">
-      <p style="color: #666; margin-bottom: 15px;">
-        共 <b><%= tags.length %></b> 个标签。点击任一标签可以查看该标签下的所有题目。
-      </p>
-      <div class="ui divider"></div>
       <div style="line-height: 2.5em;">
-        <% for (let tag of tags) { %>
+        <% for (const tag of g.items) { %>
           <a href="<%= syzoj.utils.makeUrl(['problems', 'tag', tag.id]) %>"
-             class="ui <%= tag.color %> label"
+             class="ui <%= KNOWN_COLORS.includes(tag.color) ? tag.color : '' %> label"
              style="margin: 4px 4px 4px 0;">
             <%= tag.name %>
             <% if (tag.problemCount > 0) { %>
               <div class="detail"><%= tag.problemCount %></div>
             <% } %>
+          </a>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (orphans.length > 0) { %>
+    <div class="ui segment" style="margin-bottom: 18px;">
+      <h3 style="margin-top: 0;">
+        <i class="question circle icon"></i>未分类
+        <span style="font-weight: normal; color: #888; font-size: 0.7em; margin-left: 6px;">
+          <%= orphans.length %> 项
+        </span>
+      </h3>
+      <div style="line-height: 2.5em;">
+        <% for (const tag of orphans) { %>
+          <a href="<%= syzoj.utils.makeUrl(['problems', 'tag', tag.id]) %>"
+             class="ui <%= KNOWN_COLORS.includes(tag.color) ? tag.color : '' %> label"
+             style="margin: 4px 4px 4px 0;">
+            <%= tag.name %>
           </a>
         <% } %>
       </div>

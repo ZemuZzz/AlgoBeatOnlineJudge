@@ -31,9 +31,7 @@
 
 特别的，本项目中 **必须使用 cgroup v1**（judge runner 依赖 simple-sandbox，不兼容 cgroup v2）。
 
-:::info[如果你的系统默认是 cgroup v2]
-编辑 `/etc/default/grub`，在 `GRUB_CMDLINE_LINUX` 追加 `systemd.unified_cgroup_hierarchy=0`，然后 `update-grub && reboot`。
-:::
+如果你的系统默认是 cgroup v2，编辑 `/etc/default/grub`，在 `GRUB_CMDLINE_LINUX` 追加 `systemd.unified_cgroup_hierarchy=0`，然后 `update-grub && reboot`。
 
 ### 部署步骤
 

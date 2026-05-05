@@ -46,6 +46,42 @@
 
     </script>
     <% } %>
+    <%
+    // ============ 用户名颜色 tier 注入(给 Vue 组件用)============
+    let _tierMap = {};
+    function _calcTier(userId, isAdminUser) {
+        if (isAdminUser) return 'admin';
+        if (syzoj.adminUserIds && syzoj.adminUserIds.has(userId)) return 'admin';
+        if (syzoj.userHitScores && syzoj.userHitScores.has(userId)) {
+            let s = syzoj.userHitScores.get(userId);
+            let h = s.total || 0;
+            if (h >= 350) return 'red';
+            if (h >= 280) return 'orange';
+            if (h >= 200) return 'green';
+            if (h >= 100) return 'blue';
+            return 'gray';
+        }
+        return 'default';
+    }
+    // 1. admin 用户(优先级最高)
+    if (syzoj.adminUserIds) {
+        for (let uid of syzoj.adminUserIds) _tierMap[uid] = 'admin';
+    }
+    // 2. Hit 值非 default 档的用户
+    if (syzoj.userHitScores) {
+        for (let [uid, scoreData] of syzoj.userHitScores) {
+            if (_tierMap[uid] === 'admin') continue; // admin 优先级更高
+            let t = _calcTier(uid, false);
+            if (t !== 'default' && t !== 'gray') {
+                // 只塞非 gray 档的(gray 跟 default 同色,省点字节)
+                _tierMap[uid] = t;
+            }
+        }
+    }
+%>
+<script>
+window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
+</script>
 </head>
 <body style="position: relative; margin-top: 49px; height: calc(100% - 49px); overflow-y: overlay; ">
     <div class="ui fixed borderless menu" style="position: fixed; height: 49px; ">

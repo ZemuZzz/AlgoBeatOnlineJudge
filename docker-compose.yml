@@ -91,6 +91,8 @@ services:
       - ./custom/models-built/user-hit-setting.js:/app/models-built/user-hit-setting.js:ro
       - ./custom/models/user-hit-setting.ts:/app/models/user-hit-setting.ts:ro
       - ./custom/views/help_hit_value.ejs:/app/views/help_hit_value.ejs:ro
+      - ./custom/views/submissions_item.ejs:/app/views/submissions_item.ejs:ro
+      - ./custom/modules/_ranklist.js:/app/modules/_ranklist.js:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

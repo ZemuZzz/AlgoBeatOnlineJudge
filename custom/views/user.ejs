@@ -171,6 +171,113 @@
                             </div>
                           <% } %>
                         </div>
+                        <% if (canViewHit && hitScores) { %>
+                <div class="row">
+                    <div class="column">
+                        <h4 class="ui top attached block header">
+                            <i class="chart line icon"></i> Hit 值趋势（近 30 天）
+                        </h4>
+                        <div class="ui bottom attached segment">
+                          <div id="hit-trend-empty" style="color: #999; text-align: center; padding: 20px 0; display: none;">
+                            <i class="hourglass half icon"></i>
+                            历史数据还在积累中,请几天后再来查看趋势。
+                          </div>
+                          <div id="hit-trend-loading" style="color: #999; text-align: center; padding: 20px 0;">
+                            <i class="spinner loading icon"></i> 加载中...
+                          </div>
+                          <canvas id="hit-trend-canvas" style="max-height: 300px; display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                (function() {
+                  var uid = <%= show_user.id %>;
+                  fetch('/api/hit-history/' + uid + '?days=30')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                      var loading = document.getElementById('hit-trend-loading');
+                      var empty = document.getElementById('hit-trend-empty');
+                      var canvas = document.getElementById('hit-trend-canvas');
+                      loading.style.display = 'none';
+
+                      if (!data.ok || !data.points || data.points.length < 2) {
+                        empty.style.display = 'block';
+                        return;
+                      }
+                      canvas.style.display = 'block';
+
+                      var labels = data.points.map(function(p) {
+                        var d = new Date(p.t * 1000);
+                        return (d.getMonth() + 1) + '/' + d.getDate();
+                      });
+                      var basicData = data.points.map(function(p) { return p.basic; });
+                      var contribData = data.points.map(function(p) { return p.contribution; });
+                      var contestData = data.points.map(function(p) { return p.contest; });
+                      var practiceData = data.points.map(function(p) { return p.practice; });
+
+                      new Chart(canvas.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                          labels: labels,
+                          datasets: [
+                            {
+                              label: '基础信用分',
+                              data: basicData,
+                              borderColor: '#2185d0',
+                              backgroundColor: 'rgba(33,133,208,0.08)',
+                              fill: false,
+                              tension: 0.2
+                            },
+                            {
+                              label: '社区贡献分',
+                              data: contribData,
+                              borderColor: '#21ba45',
+                              backgroundColor: 'rgba(33,186,69,0.08)',
+                              fill: false,
+                              tension: 0.2
+                            },
+                            {
+                              label: '比赛参与分',
+                              data: contestData,
+                              borderColor: '#f2711c',
+                              backgroundColor: 'rgba(242,113,28,0.08)',
+                              fill: false,
+                              tension: 0.2
+                            },
+                            {
+                              label: '题目练习分',
+                              data: practiceData,
+                              borderColor: '#db2828',
+                              backgroundColor: 'rgba(219,40,40,0.08)',
+                              fill: false,
+                              tension: 0.2
+                            }
+                          ]
+                        },
+                        options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          legend: { position: 'bottom' },
+                          scales: {
+                            yAxes: [{
+                              ticks: { beginAtZero: true, max: 100, stepSize: 20 }
+                            }]
+                          },
+                          tooltips: { mode: 'index', intersect: false }
+                        }
+                      });
+                    })
+                    .catch(function(e) {
+                      var loading = document.getElementById('hit-trend-loading');
+                      var empty = document.getElementById('hit-trend-empty');
+                      loading.style.display = 'none';
+                      empty.style.display = 'block';
+                      console.error('hit-trend fetch failed', e);
+                    });
+                })();
+                </script>
+                <% } %>
                     </div>
                 </div>
                 <% } %>

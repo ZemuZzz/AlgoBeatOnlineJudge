@@ -367,3 +367,50 @@ app.get('/help/hit-value', async (req, res) => {
     res.render('error', { err: e });
   }
 });
+
+// ============ 历史趋势 API:返回某用户过去 N 天的 Hit 历史 ============
+app.get('/api/hit-history/:uid', async (req, res) => {
+  try {
+    let uid = parseInt(req.params.uid);
+    if (!uid) {
+      return res.json({ ok: false, message: 'invalid uid' });
+    }
+
+    // 检查目标用户是否隐藏了 Hit 卡片
+    if (syzoj.userHitHidden && syzoj.userHitHidden.has(uid)) {
+      // 隐藏开关开启时,只允许本人看
+      if (!res.locals.user || res.locals.user.id !== uid) {
+        return res.json({ ok: false, message: 'hidden by user' });
+      }
+    }
+
+    let days = parseInt(req.query.days) || 30;
+    if (days < 1 || days > 90) days = 30;
+
+    let now = parseInt((new Date()).getTime() / 1000);
+    let cutoff = now - days * 86400;
+
+    let rows = await UserHitScoreHistory.createQueryBuilder()
+      .where('user_id = :uid', { uid: uid })
+      .andWhere('recorded_at >= :cutoff', { cutoff: cutoff })
+      .orderBy('recorded_at', 'ASC')
+      .getMany();
+
+    // 序列化成前端友好的格式
+    let points = rows.map(function(r) {
+      return {
+        t: r.recorded_at,
+        basic: r.basic_score,
+        contribution: r.contribution_score,
+        contest: r.contest_score,
+        practice: r.practice_score
+      };
+    });
+
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, points: points, days: days });
+  } catch (e) {
+    syzoj.log(e);
+    res.json({ ok: false, message: e.message });
+  }
+});

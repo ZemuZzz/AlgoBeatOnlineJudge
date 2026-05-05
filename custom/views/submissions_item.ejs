@@ -48,6 +48,20 @@ Vue.component('submission-item', {
       var tier = tiers[this.data.info.userId] || 'default';
       return 'username-tier-' + tier;
     },
+    cheatedClass() {
+      var ids = window.__SYZOJ_CHEATED_JUDGE_IDS || [];
+      if (ids.indexOf(this.data.info.submissionId) !== -1) return 'cheated';
+      var cs = window.__SYZOJ_CANCELLED_JUDGE_IDS || [];
+      if (cs.indexOf(this.data.info.submissionId) !== -1) return 'cancelled';
+      return '';
+    },
+    cheatedLabel() {
+      var ids = window.__SYZOJ_CHEATED_JUDGE_IDS || [];
+      if (ids.indexOf(this.data.info.submissionId) !== -1) return '作弊';
+      var cs = window.__SYZOJ_CANCELLED_JUDGE_IDS || [];
+      if (cs.indexOf(this.data.info.submissionId) !== -1) return '已取消';
+      return '';
+    },
     scoreClass() {
       return "score_" + (parseInt(this.data.result.score / 10) || 0).toString();
     }
@@ -72,9 +86,27 @@ Vue.component('submission-item', {
   <% } %>
   <td ref="problemLabel"><a ref="problemLabelTextFit" style="width: 230px; height: 22px; display: block; margin: 0 auto; line-height: 22px;" :href="problemLink"><b>#{{ config.inContest ? alpha(data.info.problemId) : data.info.problemId }}.</b> {{ data.info.problemName }}</a></td>
   <% if (active === 'submissions') { %>
-  <td><a :href="submissionLink"><b><status-label :status="statusString" :progress="progress"></status-label></b></a></td>
+  <td>
+    <template v-if="cheatedLabel">
+      <span class="ui small label" :class="cheatedClass === 'cheated' ? 'red' : 'grey'" style="margin: 0;">
+        <i class="ban icon"></i>{{ cheatedLabel }}
+      </span>
+    </template>
+    <template v-else>
+      <a :href="submissionLink"><b><status-label :status="statusString" :progress="progress"></status-label></b></a>
+    </template>
+  </td>
   <% } else { %>
-  <td><b><status-label :status="statusString" :progress="progress"></status-label></b></td>
+  <td>
+    <template v-if="cheatedLabel">
+      <span class="ui small label" :class="cheatedClass === 'cheated' ? 'red' : 'grey'" style="margin: 0;">
+        <i class="ban icon"></i>{{ cheatedLabel }}
+      </span>
+    </template>
+    <template v-else>
+      <b><status-label :status="statusString" :progress="progress"></status-label></b>
+    </template>
+  </td>
   <% } %>
 
   <template v-if="data.result">

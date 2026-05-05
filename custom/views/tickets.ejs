@@ -1,0 +1,151 @@
+<% this.title = '工单列表' %>
+<% include header %>
+
+<div class="padding">
+  <!-- 顶部:标题 + 新建按钮 -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;"><i class="ticket icon"></i> 工单列表</h2>
+    <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>">
+      <i class="plus icon"></i> 新的工单
+    </a>
+  </div>
+
+<!-- 筛选区 -->
+  <div class="ui segment" style="margin-bottom: 15px; padding: 12px 15px;">
+    <% if (isAdmin) { %>
+      <!-- Row 1: 视角筛选(仅 admin) -->
+      <div style="margin-bottom: 10px;">
+        <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">视角:</span>
+        <div class="ui small basic buttons">
+          <a class="ui button <% if (filter === 'all') { %>active<% } %>"
+             href="<%= syzoj.utils.makeUrl(['tickets'], { filter: 'all' }) %>">● 全部</a>
+          <a class="ui button <% if (filter === 'mine') { %>active<% } %>"
+             href="<%= syzoj.utils.makeUrl(['tickets'], { filter: 'mine' }) %>">■ 我创建的</a>
+          <a class="ui button <% if (filter === 'assigned') { %>active<% } %>"
+             href="<%= syzoj.utils.makeUrl(['tickets'], { filter: 'assigned' }) %>">▲ 我处理的</a>
+          <a class="ui button <% if (filter === 'unassigned') { %>active<% } %>"
+             href="<%= syzoj.utils.makeUrl(['tickets'], { filter: 'unassigned' }) %>">⚠ 待认领</a>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Row 2: 类别筛选 -->
+    <div style="margin-bottom: 10px;">
+      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">类别:</span>
+      <div class="ui small basic buttons">
+        <a class="ui button <% if (!categoryFilter) { %>active<% } %>"
+           href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %>">所有类别</a>
+        <% Object.keys(categories).forEach(function(catKey) { let cat = categories[catKey]; %>
+          <a class="ui button <% if (categoryFilter === catKey) { %>active<% } %>"
+             href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %>category=<%= catKey %>">
+            <%= cat.label %>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Row 3: 状态筛选 -->
+    <div>
+      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">状态:</span>
+      <div class="ui small basic buttons">
+        <a class="ui button <% if (!statusFilter) { %>active<% } %>"
+           href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %><%= categoryFilter ? 'category=' + categoryFilter + '&' : '' %>">所有状态</a>
+        <% Object.keys(statusMeta).forEach(function(stKey) { let st = statusMeta[stKey]; %>
+          <a class="ui button <% if (statusFilter === stKey) { %>active<% } %>"
+             href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %><%= categoryFilter ? 'category=' + categoryFilter + '&' : '' %>status=<%= stKey %>">
+            <%= st.label %>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工单列表 -->
+  <% if (tickets.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="ticket icon"></i>
+        当前条件下没有工单。
+      </div>
+      <% if (filter !== 'mine' && !categoryFilter && !statusFilter) { %>
+        <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>">
+          <i class="plus icon"></i> 创建第一个工单
+        </a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="ui divided items" style="margin-top: 0;">
+      <% for (let t of tickets) {
+        let cat = categories[t.category];
+        let st = statusMeta[t.status];
+        let creator = creatorMap[t.creator_id];
+        let assignee = t.assignee_id ? assigneeMap[t.assignee_id] : null;
+        let subtypeName = cat ? (cat.subtypes.find(s => s.value === t.subtype) || {}).label : t.subtype;
+      %>
+        <div class="item" style="padding: 14px 12px; border-bottom: 1px solid #eee;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <!-- 类别图标(emoji 风格) -->
+            <div style="flex-shrink: 0;">
+              <div class="ui circular <%= cat ? cat.color : 'grey' %> label" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2em;">
+                <% if (t.category === 'problem') { %>📝<% }
+                   else if (t.category === 'contest') { %>🏆<% }
+                   else if (t.category === 'article') { %>📄<% }
+                   else if (t.category === 'user') { %>👤<% }
+                   else if (t.category === 'report') { %>🚨<% }
+                   else { %>💬<% } %>
+              </div>
+            </div>
+
+            <!-- 主体 -->
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 1.05em; margin-bottom: 4px;">
+                <a href="<%= syzoj.utils.makeUrl(['ticket', t.id]) %>" style="color: #333; font-weight: bold;">
+                  <%= t.title %>
+                </a>
+              </div>
+              <div style="color: #888; font-size: 0.88em;">
+                <span class="ui mini <%= cat ? cat.color : 'grey' %> label" style="margin-right: 4px;">
+                  <%= cat ? cat.label : t.category %>
+                </span>
+                <% if (subtypeName) { %><span style="margin-right: 8px;"><%= subtypeName %></span><% } %>
+                <% if (creator) { %>
+                  · 创建: <%- syzoj.utils.renderUsername(creator) %>
+                <% } %>
+                <% if (assignee) { %>
+                  · 处理: <%- syzoj.utils.renderUsername(assignee) %>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- 右侧:状态 + 编号 + 时间 -->
+            <div style="text-align: right; flex-shrink: 0; min-width: 130px;">
+              <div style="margin-bottom: 4px;">
+                <span class="ui mini <%= st ? st.color : 'grey' %> label">
+                  <%= st ? st.label : t.status %>
+                </span>
+              </div>
+              <div style="color: #999; font-size: 0.85em;">
+                #<%= t.id %>
+              </div>
+              <div style="color: #aaa; font-size: 0.78em;">
+                <%= syzoj.utils.formatDate(t.updated_at) %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <% include page %>
+  <% } %>
+
+  <!-- 创建配额提示 -->
+  <% if (!isAdmin) { %>
+    <div style="text-align: center; color: #aaa; font-size: 0.85em; margin-top: 25px;">
+      <i class="info circle icon"></i>
+      每位用户每 24 小时最多可创建 5 个工单
+    </div>
+  <% } %>
+</div>
+
+<% include footer %>

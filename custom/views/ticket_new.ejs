@@ -1,0 +1,212 @@
+<% this.title = '创建工单' %>
+<% include header %>
+
+<div class="padding">
+  <!-- 步骤指示 -->
+  <div class="ui steps" style="margin-bottom: 25px;">
+    <div class="<%= step === 'select_type' ? 'active' : 'completed' %> step">
+      <div class="content">
+        <div class="title">1. 工单类型</div>
+        <div class="description">选择工单类型及关联项目</div>
+      </div>
+    </div>
+    <div class="<%= step === 'fill_form' ? 'active' : 'disabled' %> step">
+      <div class="content">
+        <div class="title">2. 基础信息</div>
+        <div class="description">填写工单基础信息</div>
+      </div>
+    </div>
+  </div>
+
+  <% if (step === 'select_type') { %>
+
+    <!-- ========= 步骤 1:选择类别 ========= -->
+    <div class="ui segment">
+      <h3 style="margin-top: 0;">工单类型</h3>
+      <div class="ui divider"></div>
+
+      <% Object.keys(categories).forEach(function(catKey) { let cat = categories[catKey]; %>
+        <div style="margin-bottom: 18px;">
+          <h4 style="margin-bottom: 8px;"><%= cat.label %></h4>
+          <% cat.subtypes.forEach(function(sub) { %>
+            <a class="ui basic <%= cat.color %> button"
+               href="<%= syzoj.utils.makeUrl(['ticket', 'new'], { category: catKey, subtype: sub.value }) %>"
+               style="margin: 3px;">
+              <%= sub.label %>
+            </a>
+          <% }); %>
+        </div>
+      <% }); %>
+    </div>
+
+    <div style="text-align: right; margin-top: 15px; color: #999; font-size: 0.9em;">
+      <i class="info circle icon"></i>
+      您 24 小时内已创建 <%= recentCount %> / 5 个工单
+    </div>
+
+  <% } else if (step === 'fill_form') {
+    let cat = categories[category];
+    let subInfo = cat.subtypes.find(s => s.value === subtype);
+  %>
+
+    <!-- ========= 步骤 2:填写表单 ========= -->
+    <div class="ui segment">
+      <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>">
+        <input type="hidden" name="category" value="<%= category %>">
+        <input type="hidden" name="subtype" value="<%= subtype %>">
+
+        <div class="field">
+          <label>工单类型</label>
+          <div>
+            <span class="ui <%= cat.color %> label"><%= cat.label %></span>
+            <span class="ui basic label"><%= subInfo.label %></span>
+            <a class="ui mini button" href="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>" style="margin-left: 10px;">
+              重新选择
+            </a>
+          </div>
+        </div>
+
+        <% if (cat.relation_required) { %>
+          <div class="field">
+            <label>
+              关联<%= cat.relation === 'problem' ? '题目' : cat.relation === 'contest' ? '比赛' : cat.relation === 'article' ? '文章' : '用户' %>
+              <span style="color: #db2828;">*</span>
+            </label>
+            <div class="ui search" style="position: relative;">
+              <div class="ui icon input" style="width: 100%;">
+                <input type="text" id="relation_search_input"
+                       placeholder="按 ID 或<%= cat.relation === 'user' ? '用户名' : '标题' %>搜索..."
+                       autocomplete="off"
+                       style="padding-right: 40px;">
+                <i class="search icon"></i>
+              </div>
+              <input type="hidden" name="relation_id" id="relation_id_value" value="<%= prefilledRelation %>">
+              <div id="relation_results" class="ui menu vertical fluid"
+                   style="display: none; position: absolute; top: 100%; left: 0; z-index: 100; background: white; border: 1px solid #ccc; max-height: 250px; overflow-y: auto;"></div>
+              <div id="relation_selected" style="margin-top: 6px; color: #21ba45; font-weight: bold; display: none;">
+                <i class="check icon"></i><span></span>
+              </div>
+            </div>
+          </div>
+        <% } else if (cat.relation === 'user' && category === 'user') { %>
+          <div class="field">
+            <label>关联用户</label>
+            <div style="color: #666;">
+              将默认关联您本人 <span class="ui label"><%= res.locals.user.username %></span>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (category === 'report') { %>
+          <div class="field">
+            <label>举报原因 <span style="color: #db2828;">*</span></label>
+            <textarea name="report_reason" rows="2" placeholder="请简要说明举报理由(必填)" required></textarea>
+          </div>
+        <% } %>
+
+        <div class="field">
+          <label>工单标题 <span style="color: #db2828;">*</span></label>
+          <input type="text" name="title" maxlength="200" minlength="5"
+                 placeholder="请简洁明了地描述问题及理由(5-200 字符)" required>
+        </div>
+
+        <div class="field">
+          <label>工单描述</label>
+          <textarea name="description" rows="6"
+                    placeholder="(可选) 详细描述问题、复现步骤、相关链接等。支持 Markdown。"></textarea>
+        </div>
+
+        <div style="margin-top: 25px; display: flex; justify-content: space-between;">
+          <a class="ui button" href="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>">
+            <i class="angle left icon"></i> 上一步
+          </a>
+          <button type="submit" class="ui primary button">
+            提交工单 <i class="angle right icon"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <% if (cat.relation_required) { %>
+    <script>
+    (function() {
+      var input = document.getElementById('relation_search_input');
+      var resultsDiv = document.getElementById('relation_results');
+      var hiddenId = document.getElementById('relation_id_value');
+      var selectedDiv = document.getElementById('relation_selected');
+      var debounceTimer = null;
+      var relType = <%- JSON.stringify(cat.relation) %>;
+
+      // 如果有预填的 id,立即查询展示
+      if (hiddenId.value) {
+        fetch('/api/ticket-relation-search?type=' + relType + '&q=' + encodeURIComponent(hiddenId.value))
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.results && d.results.length > 0) {
+              var match = d.results.find(function(x) { return x.id == hiddenId.value; });
+              if (match) {
+                selectedDiv.style.display = 'block';
+                selectedDiv.querySelector('span').textContent = ' 已选: ' + match.name;
+                input.value = match.name;
+              }
+            }
+          });
+      }
+
+      input.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        var q = input.value.trim();
+        if (!q) {
+          resultsDiv.style.display = 'none';
+          hiddenId.value = '';
+          selectedDiv.style.display = 'none';
+          return;
+        }
+        debounceTimer = setTimeout(function() {
+          fetch('/api/ticket-relation-search?type=' + relType + '&q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+              resultsDiv.innerHTML = '';
+              if (!d.results || d.results.length === 0) {
+                var item = document.createElement('div');
+                item.className = 'item';
+                item.style.cssText = 'padding: 8px 12px; color: #999;';
+                item.textContent = '未找到匹配项';
+                resultsDiv.appendChild(item);
+              } else {
+                d.results.forEach(function(r) {
+                  var item = document.createElement('a');
+                  item.className = 'item';
+                  item.style.cssText = 'display: block; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; text-decoration: none; color: #333;';
+                  item.textContent = r.name;
+                  item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    input.value = r.name;
+                    hiddenId.value = r.id;
+                    selectedDiv.style.display = 'block';
+                    selectedDiv.querySelector('span').textContent = ' 已选: ' + r.name;
+                    resultsDiv.style.display = 'none';
+                  });
+                  resultsDiv.appendChild(item);
+                });
+              }
+              resultsDiv.style.display = 'block';
+            })
+            .catch(function() { resultsDiv.style.display = 'none'; });
+        }, 300);
+      });
+
+      // 点击外部关闭
+      document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !resultsDiv.contains(e.target)) {
+          resultsDiv.style.display = 'none';
+        }
+      });
+    })();
+    </script>
+    <% } %>
+
+  <% } %>
+</div>
+
+<% include footer %>

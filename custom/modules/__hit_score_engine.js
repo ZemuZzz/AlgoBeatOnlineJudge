@@ -123,8 +123,10 @@ async function calcOneUser(user) {
   try {
     let tagRow = await ProblemTagMap.createQueryBuilder('m')
       .innerJoin('judge_state', 'js', 'js.problem_id = m.problem_id')
+      .leftJoin('judge_state_admin_action', 'a', 'a.judge_id = js.id')
       .where('js.user_id = :uid', { uid: user.id })
       .andWhere('js.status = :st', { st: 'Accepted' })
+      .andWhere('a.judge_id IS NULL')
       .select('COUNT(DISTINCT m.tag_id)', 'cnt')
       .getRawOne();
     tagCount = tagRow ? parseInt(tagRow.cnt) || 0 : 0;
@@ -134,10 +136,12 @@ async function calcOneUser(user) {
   // 最后一次 AC 时间
   let lastAcRow = null;
   try {
-    lastAcRow = await JudgeState.createQueryBuilder()
-      .select('MAX(submit_time)', 'last_ac')
-      .where('user_id = :uid', { uid: user.id })
-      .andWhere('status = :st', { st: 'Accepted' })
+    lastAcRow = await JudgeState.createQueryBuilder('js')
+      .leftJoin('judge_state_admin_action', 'a', 'a.judge_id = js.id')
+      .select('MAX(js.submit_time)', 'last_ac')
+      .where('js.user_id = :uid', { uid: user.id })
+      .andWhere('js.status = :st', { st: 'Accepted' })
+      .andWhere('a.judge_id IS NULL')
       .getRawOne();
   } catch (e) {}
   let lastAcTime = lastAcRow ? parseInt(lastAcRow.last_ac) || 0 : 0;

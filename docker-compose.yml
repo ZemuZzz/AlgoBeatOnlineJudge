@@ -93,6 +93,24 @@ services:
       - ./custom/views/help_hit_value.ejs:/app/views/help_hit_value.ejs:ro
       - ./custom/views/submissions_item.ejs:/app/views/submissions_item.ejs:ro
       - ./custom/modules/_ranklist.js:/app/modules/_ranklist.js:ro
+      - ./custom/modules/_contest_delete.js:/app/modules/_contest_delete.js:ro
+      - ./custom/views/contest_edit.ejs:/app/views/contest_edit.ejs:ro
+      - ./custom/models-built/judge-state-admin-action.js:/app/models-built/judge-state-admin-action.js:ro
+      - ./custom/models/judge-state-admin-action.ts:/app/models/judge-state-admin-action.ts:ro
+      - ./custom/modules/_judge_admin_action.js:/app/modules/_judge_admin_action.js:ro
+      - ./custom/views/submission.ejs:/app/views/submission.ejs:ro
+      - ./custom/modules/_judge_admin_action_loader.js:/app/modules/_judge_admin_action_loader.js:ro
+      - ./custom/models-built/ticket.js:/app/models-built/ticket.js:ro
+      - ./custom/models-built/ticket-reply.js:/app/models-built/ticket-reply.js:ro
+      - ./custom/models-built/ticket-attachment.js:/app/models-built/ticket-attachment.js:ro
+      - ./custom/models/ticket.ts:/app/models/ticket.ts:ro
+      - ./custom/models/ticket-reply.ts:/app/models/ticket-reply.ts:ro
+      - ./custom/models/ticket-attachment.ts:/app/models/ticket-attachment.ts:ro
+      - ./custom/uploads:/app/custom-uploads
+      - ./custom/modules/ticket.js:/app/modules/ticket.js:ro
+      - ./custom/views/tickets.ejs:/app/views/tickets.ejs:ro
+      - ./custom/views/ticket_new.ejs:/app/views/ticket_new.ejs:ro
+      - ./custom/views/ticket.ejs:/app/views/ticket.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

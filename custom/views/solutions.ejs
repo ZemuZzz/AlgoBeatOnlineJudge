@@ -30,15 +30,23 @@
 
       <% if (typeof canManageSetting !== 'undefined' && canManageSetting) { %>
         <% if (submissionDisabled) { %>
-          <a class="ui green button" href-post="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
-             onclick="return confirm('确定重新开放此题的题解提交吗？');">
-            <i class="unlock icon"></i> 开放投稿
-          </a>
+          <form method="post"
+                action="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
+                onsubmit="return confirm('确定重新开放此题的题解提交吗？');"
+                style="display: inline; margin: 0;">
+            <button type="submit" class="ui green button">
+              <i class="unlock icon"></i> 开放投稿
+            </button>
+          </form>
         <% } else { %>
-          <a class="ui yellow button" href-post="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
-             onclick="return confirm('确定关闭此题的题解提交吗？已通过的题解仍然可见，但其他用户不能再投稿。');">
-            <i class="lock icon"></i> 关闭投稿
-          </a>
+          <form method="post"
+                action="<%= syzoj.utils.makeUrl(['problem', problem.id, 'solution-toggle-submission']) %>"
+                onsubmit="return confirm('确定关闭此题的题解提交吗？已通过的题解仍然可见，但用户不能再投稿。');"
+                style="display: inline; margin: 0;">
+            <button type="submit" class="ui yellow button">
+              <i class="lock icon"></i> 关闭投稿
+            </button>
+          </form>
         <% } %>
       <% } %>
     </div>

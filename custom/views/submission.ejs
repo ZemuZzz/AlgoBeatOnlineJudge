@@ -1,0 +1,431 @@
+<% this.title = '提交记录 #' + info.submissionId %>
+<% include util %>
+<% include header %>
+<%
+// ============ 数据准备(实际数据由 _judge_admin_action_loader.js middleware 注入到 res.locals) ============
+let isAdminCheating = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction && judgeAdminAction.action_type === 'cheated');
+let isAdminCancelled = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction && judgeAdminAction.action_type === 'cancelled');
+let isMarked = isAdminCheating || isAdminCancelled;
+let canManageAction = res.locals.user && (res.locals.user.is_admin ||
+  (res.locals.user.privileges && res.locals.user.privileges.includes('manage_problem')));
+let markedDetail = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction) ? judgeAdminAction : null;
+%>
+<script src="<%- lib('textfit/2.3.1/textFit.min.js') %>"></script>
+<style>
+.single-subtask {
+    box-shadow: none !important;
+}
+
+.single-subtask > .title {
+    display: none;
+}
+
+.single-subtask > .content {
+    padding: 0 !important;
+}
+
+.accordion > .content > .accordion {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.accordion > .content > .accordion > .content {
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+.accordion > .content > .accordion > .content > :last-child {
+    margin-bottom: -10px !important;
+}
+</style>
+<span id="submission_content">
+<div class="padding" id="vueAppFuckSafari">
+<% if (isMarked && markedDetail) { %>
+    <div class="ui <%= markedDetail.action_type === 'cheated' ? 'red' : 'grey' %> message" style="margin-top: 10px;">
+      <i class="<%= markedDetail.action_type === 'cheated' ? 'ban' : 'remove circle' %> icon" style="font-size: 1.4em; vertical-align: middle;"></i>
+      <span style="font-size: 1.05em; vertical-align: middle;">
+        <b>该提交已被标记为「<%= markedDetail.action_type === 'cheated' ? '作弊' : '取消评测' %>」</b>
+        &nbsp; — &nbsp;
+        操作人: <a href="<%= syzoj.utils.makeUrl(['user', markedDetail.operator_id]) %>"><%= markedDetail.operator_username %></a>
+        &nbsp; · &nbsp;
+        时间: <%= syzoj.utils.formatDate(markedDetail.operator_time) %>
+        <% if (markedDetail.reason) { %>
+          <br><span style="color: #555;">原因: <%= markedDetail.reason %></span>
+        <% } %>
+      </span>
+    </div>
+  <% } %>
+
+  <% if (canManageAction) { %>
+    <div class="ui segment" style="margin-top: 10px; background: #f9fafb;">
+      <h4 style="margin-top: 0;"><i class="shield alternate icon"></i> 管理员操作</h4>
+      <% if (!isMarked) { %>
+        <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'admin-action']) %>"
+              onsubmit="return confirm('确定执行此操作吗?\n\n如果原本是 AC 提交且该用户对该题没有其他有效 AC,user.ac_num 将自动减 1。\nHit 值会在下次重算时自动过滤此提交。');"
+              style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <input type="text" name="reason" placeholder="原因(可选)" maxlength="255" style="flex: 1; min-width: 200px; padding: 6px 10px;">
+          <button type="submit" name="action_type" value="cheated" class="ui red button">
+            <i class="ban icon"></i> 判定作弊
+          </button>
+          <button type="submit" name="action_type" value="cancelled" class="ui grey button">
+            <i class="remove circle icon"></i> 取消评测
+          </button>
+        </form>
+        <p style="color: #888; font-size: 0.9em; margin: 8px 0 0 0;">
+          <i class="info circle icon"></i>
+          标记后该提交会在站内显示为对应状态,并从该用户 Hit 值计算中剔除。如果原本是 AC,user.ac_num 也会同步调整。
+        </p>
+      <% } else { %>
+        <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'admin-action', 'revoke']) %>"
+              onsubmit="return confirm('确定撤销此标记吗?\n\n该提交将恢复为原本的评测状态;如果当时减过 ac_num,会自动恢复。');"
+              style="margin: 0;">
+          <button type="submit" class="ui green button">
+            <i class="undo icon"></i> 撤销此标记
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+  <table class="ui very basic center aligned table" id="status_table">
+    <thead>
+      <tr>
+        <th>编号</th>
+        <th>题目</th>
+        <th>状态</th>
+        <th v-if="displayConfig.showScore">分数</th>
+        <th v-if="displayConfig.showUsage">总时间</th>
+        <th v-if="displayConfig.showUsage">内存</th>
+        <th v-if="displayConfig.showCode">代码 / 答案文件</th>
+        <th>提交者</th>
+        <th>提交时间</th>
+        <th v-if="showRejudge">重新评测</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr is="submission-item" v-bind:data="roughData" :config="displayConfig" :show-rejudge="showRejudge" :progress="getProgress()" :compiling="detailResult && !detailResult.compile"></tr>
+    </tbody>
+  </table>
+
+  <code-box no-escape v-bind:content="code">
+    <% if (formattedCode !== null) { %>
+      <a onclick="toggleFormattedCode()" class="ui button" style="position: absolute; top: 0px; right: -4px; border-top-left-radius: 0; border-bottom-right-radius: 0; ">
+        <template v-if="currentFormatted">
+          显示原始代码
+        </template>
+        <template v-if="!currentFormatted">
+          格式化代码
+        </template>
+      </a>
+    <% } %>
+  </code-box>
+  <code-box v-if="detailResult && detailResult.compile" no-escape title="编译信息" v-bind:content="detailResult.compile.message"></code-box>
+  <code-box v-if="detailResult" title="系统信息" v-bind:content="detailResult.systemMessage"></code-box>
+
+  <div class="ui styled fluid accordion" :class="singleSubtask ? 'single-subtask' : '' " v-if="detailResult && detailResult.judge && detailResult.judge.subtasks">
+    <template v-for="subtask, $index in detailResult.judge.subtasks">
+      <div class="title" :class="singleSubtask ? 'active' : ''">
+        <div class="ui grid">
+          <div class="three wide column">
+            <i class="dropdown icon"></i>
+            子任务 #{{ $index + 1 }}
+          </div>
+          <div class="four wide column">
+            <status-label :status="getSubtaskResult(subtask)" :indetail="true" :progress="getProgress($index)"></status-label>
+          </div>
+          <div class="three wide column" v-if="subtask.score != null">
+            得分：<span style="font-weight: normal; ">{{ Math.trunc(subtask.score) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="content" :class="singleSubtask ? 'active' : ''">
+        <div class="accordion">
+          <template v-for="curCase, $caseIndex in subtask.cases">
+            <div class="title" :class="checkTestcaseOK(curCase) || curCase.errorMessage ? '' : 'unexpandable'">
+              <div class="ui grid">
+                <div class="three wide column">
+                    <i class="dropdown icon"></i>
+                    测试点 #{{ $caseIndex + 1 }}
+                </div>
+                <div class="four wide column">
+                  <status-label :status="getTestcaseStatus(curCase)" :indetail="true"></status-label>
+                </div>
+                <template v-if="checkTestcaseOK(curCase)">
+                  <div class="three wide column">
+                      得分：<span style="font-weight: normal; ">{{ Math.trunc(curCase.result.scoringRate * 100) }}</span>
+                  </div>
+                  <div class="three wide column" v-if="curCase.result.time != null && curCase.result.time !== NaN">
+                      用时：<span style="font-weight: normal; ">{{ curCase.result.time }} ms</span>
+                  </div>
+                  <div class="three wide column" v-if="curCase.result.memory != null && curCase.result.memory !== NaN">
+                      内存：<span style="font-weight: normal; ">{{ curCase.result.memory }} KiB</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+              <div class="content">
+                <template v-if="checkTestcaseOK(curCase)">
+                  <code-box v-if="curCase.result.input" :title="'输入文件（<span style=\'font-family: monospace; \'>'+ curCase.result.input.name +'</span>）'" :content="curCase.result.input.content" :download="<%= serializejs(syzoj.utils.makeUrl(['problem', info.problemId, 'testdata', 'download'])) %> + '/' + curCase.result.input.name"></code-box>
+                  <code-box v-if="curCase.result.output" :title="'答案文件（<span style=\'font-family: monospace; \'>'+ curCase.result.output.name +'</span>）'" :content="curCase.result.output.content" :download="<%= serializejs(syzoj.utils.makeUrl(['problem', info.problemId, 'testdata', 'download'])) %> + '/' + curCase.result.output.name"></code-box>
+                  <code-box title="用户输出" :content="curCase.result.userOutput"></code-box>
+                  <code-box title="标准错误流" :content="curCase.result.userError"></code-box>
+                  <code-box title="Special Judge 信息" :content="curCase.result.spjMessage"></code-box>
+                  <code-box title="系统信息" :content="curCase.result.systemMessage"></code-box>
+                </template>
+                <code-box title="错误信息" :content="curCase.errorMessage"></code-box>
+              </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%- lib('socket.io/2.2.0/socket.io.js') %>"></script>
+<script src="<%- lib('jsondiffpatch/0.2.5/jsondiffpatch.min.js') %>"></script>
+
+<% include submissions_item %>
+
+<script type="text/x-template" id="codeBoxTemplate">
+    <div style="margin-top: 0px; margin-bottom: 14px; " v-if="content != null && content !== ''">
+        <p v-if="title" class="transition visible">
+           <strong v-html="title"></strong>
+           <a v-if="download" style="color: #000; " :href="download"><i class="download icon"></i></a>
+        </p>
+        <div class="ui existing segment">
+          <slot></slot>
+          <pre v-if="!noEscape" style="margin-top: 0; margin-bottom: 0; "><code>{{ content }}</code></pre>
+          <pre v-if="noEscape" style="margin-top: 0; margin-bottom: 0; "><code v-html="content"></code></pre>
+        </div>
+    </div>
+</script>
+
+<script>
+Vue.component("code-box", {
+    template: "#codeBoxTemplate",
+    props: {
+        title: String,
+        content: String,
+        noEscape: {
+            type: Boolean,
+            default: false
+        },
+        download: String
+    }
+});
+const socketUrl = "/detail";
+const displayConfig = <%- serializejs(displayConfig) %>;
+const token = <%- serializejs(socketToken) %>;
+
+const TestcaseResultType = {};
+(function (TestcaseResultType) {
+    TestcaseResultType[TestcaseResultType["Accepted"] = 1] = "Accepted";
+    TestcaseResultType[TestcaseResultType["WrongAnswer"] = 2] = "WrongAnswer";
+    TestcaseResultType[TestcaseResultType["PartiallyCorrect"] = 3] = "PartiallyCorrect";
+    TestcaseResultType[TestcaseResultType["MemoryLimitExceeded"] = 4] = "MemoryLimitExceeded";
+    TestcaseResultType[TestcaseResultType["TimeLimitExceeded"] = 5] = "TimeLimitExceeded";
+    TestcaseResultType[TestcaseResultType["OutputLimitExceeded"] = 6] = "OutputLimitExceeded";
+    TestcaseResultType[TestcaseResultType["FileError"] = 7] = "FileError";
+    TestcaseResultType[TestcaseResultType["RuntimeError"] = 8] = "RuntimeError";
+    TestcaseResultType[TestcaseResultType["JudgementFailed"] = 9] = "JudgementFailed";
+    TestcaseResultType[TestcaseResultType["InvalidInteraction"] = 10] = "InvalidInteraction";
+})(TestcaseResultType);
+
+const statusToString = {};
+statusToString[TestcaseResultType.Accepted] = "Accepted";
+statusToString[TestcaseResultType.WrongAnswer] = "Wrong Answer";
+statusToString[TestcaseResultType.PartiallyCorrect] = "Partially Correct";
+statusToString[TestcaseResultType.MemoryLimitExceeded] = "Memory Limit Exceeded";
+statusToString[TestcaseResultType.TimeLimitExceeded] = "Time Limit Exceeded";
+statusToString[TestcaseResultType.OutputLimitExceeded] = "Output Limit Exceeded";
+statusToString[TestcaseResultType.RuntimeError] = "Runtime Error";
+statusToString[TestcaseResultType.FileError] = "File Error";
+statusToString[TestcaseResultType.JudgementFailed] = "Judgement Failed";
+statusToString[TestcaseResultType.InvalidInteraction] = "Invalid Interaction";
+
+const TaskStatus = {};
+(function (TaskStatus) {
+    TaskStatus[TaskStatus["Waiting"] = 0] = "Waiting";
+    TaskStatus[TaskStatus["Running"] = 1] = "Running";
+    TaskStatus[TaskStatus["Done"] = 2] = "Done";
+    TaskStatus[TaskStatus["Failed"] = 3] = "Failed";
+    TaskStatus[TaskStatus["Skipped"] = 4] = "Skipped";
+})(TaskStatus);
+
+const unformattedCode = <%- serializejs(code) %>;
+const formattedCode = <%- serializejs(formattedCode) %>;
+
+function toggleFormattedCode() {
+  if (vueApp.currentFormatted) {
+    vueApp.currentFormatted = false;
+    vueApp.code = unformattedCode;
+  } else {
+    vueApp.currentFormatted = true;
+    vueApp.code = formattedCode;
+  }
+}
+
+const vueApp = new Vue({
+  el: '#vueAppFuckSafari',
+  data: {
+    roughData: {
+      info: <%- serializejs(info) %>,
+      result: <%- serializejs(roughResult) %>,
+      running: false,
+      displayConfig: displayConfig
+    },
+    code: <%- serializejs(preferFormattedCode && formattedCode !== null) -%> ? formattedCode : unformattedCode,
+    currentFormatted: <%- serializejs(preferFormattedCode && formattedCode !== null) -%>,
+    detailResult: <%- serializejs(detailResult) %>,
+    displayConfig: displayConfig,
+  },
+  computed: {
+    singleSubtask() {
+      return this.detailResult.judge.subtasks.length === 1;
+    },
+    showRejudge() {
+      return this.displayConfig.showRejudge && (!this.roughData.running);
+    }
+  },
+  methods: {
+    getStatusString(statusCode) {
+      return statusToString[statusCode];
+    },
+    firstNonAC(t) {
+      if (t.every(function(v){ return v === TestcaseResultType.Accepted;})) {
+        return TestcaseResultType.Accepted;
+      } else {
+        return t.find(function(r) { return r !== TestcaseResultType.Accepted;});
+      }
+    },
+    getSubtaskResult(t) {
+      if (t.cases.some(function(c){ return c.status === TaskStatus.Running;})) {
+        return "Running";
+      } else if (t.cases.some(function(c) { return c.status === TaskStatus.Waiting;})) {
+        return "Waiting";
+      } else if (t.cases.every(function(c){ return c.status === TaskStatus.Done || c.status === TaskStatus.Skipped;})) {
+        return this.getStatusString(this.firstNonAC(t.cases.filter(function(c) { return c.result; })
+          .map(function(c) { return c.result.type;})));
+      } else {
+        return "System Error";
+      }
+    },
+    getTestcaseStatus(c) {
+      if (c.status === TaskStatus.Done) {
+        return this.getStatusString(c.result.type);
+      } else if (c.status === TaskStatus.Waiting) {
+        return "Waiting";
+      } else if (c.status === TaskStatus.Running) {
+        return "Running";
+      } else if (c.status === TaskStatus.Skipped) {
+        return "Skipped";
+      } else {
+        return "System Error";
+      }
+    },
+    checkTestcaseOK(c) {
+      return c.status === TaskStatus.Done;
+    },
+    getProgress(index) {
+      if (!this.detailResult || !this.detailResult.judge || !this.detailResult.judge.subtasks) return {
+        finished: 0,
+        total: 0
+      };
+
+      var isPending = status => [TaskStatus.Waiting, TaskStatus.Running].includes(status);
+      var subtaskProgress = [], allFinished = 0, allTotal = 0;
+      for (var i in this.detailResult.judge.subtasks) {
+        var subtaskFinished = 0, subtaskTotal = 0;
+        for (var j in this.detailResult.judge.subtasks[i].cases) {
+          subtaskTotal++, allTotal++;
+          if (!isPending(this.detailResult.judge.subtasks[i].cases[j].status)) subtaskFinished++, allFinished++;
+        }
+
+        subtaskProgress.push({
+          finished: subtaskFinished,
+          total: subtaskTotal
+        });
+      }
+
+      var allProgress = {
+        finished: allFinished,
+        total: allTotal
+      };
+
+      return typeof index === 'undefined' ? allProgress : subtaskProgress[index];
+    }
+  },
+  mounted() {
+    $(document).ready(function(){ $('.ui.accordion').accordion({ selector: { trigger: '.title:not(.unexpandable)' } })});
+  },
+  updated() {
+    $('.ui.accordion').off().accordion({ selector: { trigger: '.title:not(.unexpandable)' } });
+  }
+});
+if (token != null) {
+  const loadSocketIO = function () {
+    let currentVersion = 0;
+    const socket = io(socketUrl);
+    socket.on('connect', function () {
+      socket.on('start', function () {
+        vueApp.roughData.running = true;
+        console.log("Judge start!");
+        vueApp.detailResult = {};
+      });
+      socket.on('update', function (p) {
+        console.log("Delta: ", p);
+        if (p.from === currentVersion) {
+          currentVersion = p.to;
+          jsondiffpatch.patch(vueApp.detailResult, p.delta);
+          vueApp.detailResult = JSON.parse(JSON.stringify(vueApp.detailResult));// WTF?
+          vueApp.roughData.result = p.roughResult;
+        } else { // Some packets are dropped. Let's reset.
+          socket.close();
+          setTimeout(loadSocketIO, 0);
+        }
+      });
+      socket.on('finish', function (p) {
+        console.log("Judge finished");
+        vueApp.roughData.running = false;
+        vueApp.roughData.result = p.roughResult;
+        vueApp.detailResult = p.result;
+        socket.close();
+      });
+      socket.emit('join', token, function (data) {
+        console.log("join! ", data);
+        if (data && data.ok) {
+          if (data.finished) {
+            vueApp.roughData.result = data.roughResult;
+            if (!data.result) location.reload(true);
+            vueApp.detailResult = data.result;
+            socket.close();
+          } else {
+            if (data.running) {
+              // vueApp.roughData.running = true;
+              vueApp.detailResult = data.current.content;
+              // vueApp.roughData.result = data.roughResult;
+              currentVersion = data.current.version;
+            }
+          }
+        } else {
+          alert("ERROR: " + JSON.stringify(data));
+        }
+      });
+    });
+  };
+  loadSocketIO();
+}
+</script>
+<script>
+  document.addEventListener('keydown', function (event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+      var sel = window.getSelection();
+      var rg = document.createRange()
+      rg.selectNodeContents(document.querySelector('code'));
+      sel.removeAllRanges();
+      sel.addRange(rg);
+      event.preventDefault();
+    }
+  });
+</script>
+</span>
+<% include footer %>

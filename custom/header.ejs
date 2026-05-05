@@ -79,8 +79,16 @@
         }
     }
 %>
+<%
+let _cheatedIds = [];
+let _cancelledIds = [];
+if (syzoj.cheatedJudgeIds) for (let id of syzoj.cheatedJudgeIds) _cheatedIds.push(id);
+if (syzoj.cancelledJudgeIds) for (let id of syzoj.cancelledJudgeIds) _cancelledIds.push(id);
+%>
 <script>
 window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
+window.__SYZOJ_CHEATED_JUDGE_IDS = <%- JSON.stringify(_cheatedIds) %>;
+window.__SYZOJ_CANCELLED_JUDGE_IDS = <%- JSON.stringify(_cancelledIds) %>;
 </script>
 </head>
 <body style="position: relative; margin-top: 49px; height: calc(100% - 49px); overflow-y: overlay; ">
@@ -98,6 +106,9 @@ window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
             <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="comments icon"></i> 讨论</a>
             <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="help circle icon"></i> 帮助</a>
             <a class="item<% if (active.startsWith('tags')) { %> active<% } %>" href="/tags" style="margin-right: 30px;"><i class="tags icon"></i> 标签</a>
+            <% if (user) { %>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['tickets']) %>"><i class="ticket icon"></i>工单</a>
+            <% } %>
             <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
               <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="arrow left icon"></i> 返回比赛</a>
             <% } %>

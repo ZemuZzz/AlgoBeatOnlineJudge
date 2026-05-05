@@ -1,0 +1,421 @@
+<% this.title = '工单 #' + ticket.id + ' - ' + ticket.title %>
+<% include header %>
+
+<%
+let cat = categories[ticket.category];
+let st = statusMeta[ticket.status];
+let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
+%>
+
+<div class="padding">
+  <!-- 顶部:工单标题 + 编号 -->
+  <div style="margin-bottom: 18px;">
+    <div style="color: #888; font-size: 0.9em; margin-bottom: 6px;">
+      <a href="<%= syzoj.utils.makeUrl(['tickets']) %>"><i class="angle left icon"></i>返回工单列表</a>
+    </div>
+    <h2 style="margin: 0; word-break: break-word;">
+      <span style="color: #999; font-size: 0.7em; margin-right: 10px;">#<%= ticket.id %></span>
+      <%= ticket.title %>
+    </h2>
+    <div style="margin-top: 8px;">
+      <span class="ui <%= cat ? cat.color : 'grey' %> label">
+        <%= cat ? cat.label : ticket.category %>
+      </span>
+      <% if (subInfo) { %>
+        <span class="ui basic label"><%= subInfo.label %></span>
+      <% } %>
+      <span class="ui <%= st ? st.color : 'grey' %> label">
+        <i class="<%= st ? st.icon : 'help' %> icon"></i>
+        <%= st ? st.label : ticket.status %>
+      </span>
+    </div>
+  </div>
+
+  <div class="ui grid">
+    <!-- 左侧:工单描述 + 附件 + 回复区 -->
+    <div class="eleven wide column">
+      <!-- 工单描述 -->
+      <div class="ui top attached block header">
+        <i class="info circle icon"></i> 工单描述
+        <% if (canWithdraw) { %>
+          <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'withdraw']) %>"
+                onsubmit="return confirm('确定撤回此工单吗?\n\n撤回后状态将变为「已关闭」,无法再修改或回复。');"
+                style="display: inline; float: right; margin: 0;">
+            <button type="submit" class="ui mini grey button">
+              <i class="undo icon"></i> 撤回工单
+            </button>
+          </form>
+        <% } %>
+      </div>
+      <div class="ui bottom attached segment">
+        <% if (descRendered) { %>
+          <div class="font-content"><%- descRendered %></div>
+        <% } else { %>
+          <div style="color: #999; font-style: italic;">(无描述)</div>
+        <% } %>
+      </div>
+
+      <!-- 工单附件 -->
+      <% if (typeof attachments !== 'undefined' && attachments && attachments.length > 0) { %>
+        <div class="ui top attached block header" style="margin-top: 25px;">
+          <i class="paperclip icon"></i> 工单附件 (<%= attachments.length %>)
+        </div>
+        <div class="ui bottom attached segment">
+          <% for (let att of attachments) {
+            let isImg = att.mime_type && att.mime_type.startsWith('image/');
+            let sizeKB = Math.round(att.file_size / 1024);
+            let sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(2) + ' MB' : sizeKB + ' KB';
+            let downloadUrl = syzoj.utils.makeUrl(['ticket-attachment', att.id]);
+          %>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+              <% if (isImg) { %>
+                <a href="<%= downloadUrl %>" target="_blank" style="flex-shrink: 0;">
+                  <img src="<%= downloadUrl %>" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd; border-radius: 3px;">
+                </a>
+              <% } else { %>
+                <div style="flex-shrink: 0; width: 60px; height: 60px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 3px;">
+                  <i class="file outline icon" style="font-size: 1.8em; color: #888; margin: 0;"></i>
+                </div>
+              <% } %>
+              <div style="flex: 1; min-width: 0;">
+                <a href="<%= downloadUrl %>" <% if (!isImg) { %>download<% } else { %>target="_blank"<% } %> style="color: #2185d0; word-break: break-all;">
+                  <%= att.original_name %>
+                </a>
+                <div style="color: #999; font-size: 0.85em; margin-top: 3px;">
+                  <%= sizeStr %><% if (att.mime_type) { %> · <%= att.mime_type %><% } %>
+                </div>
+              </div>
+              <% if (att.uploader_id === res.locals.user.id || isAdmin) { %>
+                <form method="post" action="<%= syzoj.utils.makeUrl(['ticket-attachment', att.id, 'delete']) %>"
+                      onsubmit="return confirm('确定删除此附件吗?');"
+                      style="margin: 0; flex-shrink: 0;">
+                  <button type="submit" class="ui mini basic red button" title="删除附件">
+                    <i class="trash icon" style="margin: 0;"></i>
+                  </button>
+                </form>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
+
+      <!-- 回复时间线 -->
+      <div class="ui top attached block header" style="margin-top: 25px;">
+        <i class="comments icon"></i> 工单回复 (<%= replies.length %>)
+      </div>
+      <div class="ui bottom attached segment" style="padding: 0;">
+        <% if (replies.length === 0) { %>
+          <div style="text-align: center; color: #999; padding: 30px 20px;">
+            <i class="comment outline icon"></i> 暂无回复
+          </div>
+        <% } else { %>
+          <% for (let r of replies) {
+            let ru = replyUserMap[r.user_id];
+            let isSysMsg = r.is_status_change;
+          %>
+            <% if (isSysMsg) { %>
+              <!-- 系统消息样式 -->
+              <div style="text-align: center; padding: 12px 20px; color: #888; font-size: 0.9em; background: #fafafa; border-bottom: 1px solid #eee;">
+                <i class="info circle icon"></i> <%= r.content %>
+                <span style="margin-left: 8px; color: #aaa;">· <%= syzoj.utils.formatDate(r.created_at) %></span>
+              </div>
+            <% } else { %>
+              <!-- 普通回复 -->
+              <div style="padding: 14px 18px; border-bottom: 1px solid #eee; <% if (r.is_internal) { %>background: #fffbe6;<% } %>">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div>
+                    <% if (ru) { %>
+                      <%- syzoj.utils.renderUsername(ru) %>
+                    <% } else { %>
+                      <span style="color: #aaa;">(用户已删除)</span>
+                    <% } %>
+                    <% if (r.is_internal) { %>
+                      <span class="ui mini yellow label" style="margin-left: 6px;">
+                        <i class="lock icon"></i>内部备注
+                      </span>
+                    <% } %>
+                  </div>
+                  <div style="color: #aaa; font-size: 0.85em;">
+                    <%= syzoj.utils.formatDate(r.created_at) %>
+                  </div>
+                </div>
+                <div class="font-content"><%- r.contentRendered %></div>
+              </div>
+            <% } %>
+          <% } %>
+        <% } %>
+      </div>
+
+      <!-- 回复表单 + 附件上传 -->
+      <% if (canReply) { %>
+        <div class="ui top attached block header" style="margin-top: 25px;">
+          <i class="reply icon"></i> 添加回复
+        </div>
+        <div class="ui bottom attached segment">
+          <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'reply']) %>" class="ui form">
+            <div class="field">
+              <textarea name="content" rows="5" placeholder="支持 Markdown 语法。回复后无法编辑或删除,请谨慎填写。" required></textarea>
+            </div>
+            <% if (isAdmin) { %>
+              <div class="field">
+                <div class="ui checkbox">
+                  <input type="checkbox" name="is_internal" id="is_internal_check">
+                  <label for="is_internal_check" style="cursor: pointer;">
+                    标记为内部备注(仅其他 admin 可见,工单创建者看不到)
+                  </label>
+                </div>
+              </div>
+            <% } %>
+            <button type="submit" class="ui primary button">
+              <i class="paper plane icon"></i> 提交回复
+            </button>
+          </form>
+
+          <!-- 附件上传 -->
+          <div class="ui divider"></div>
+          <div>
+            <h5 style="margin-bottom: 8px;">
+              <i class="paperclip icon"></i> 上传附件
+              <span style="color: #999; font-size: 0.85em; font-weight: normal;">
+                (单文件最大 <%= typeof MAX_ATTACHMENT_SIZE_MB !== 'undefined' ? MAX_ATTACHMENT_SIZE_MB : 20 %> MB,本工单累计最多 <%= typeof MAX_ATTACHMENT_FILES !== 'undefined' ? MAX_ATTACHMENT_FILES : 10 %> 个)
+              </span>
+            </h5>
+            <form id="attachment-upload-form" method="post" enctype="multipart/form-data"
+                  action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'upload']) %>"
+                  style="margin-bottom: 0;">
+              <input type="file" name="attachments" multiple
+                     style="margin-bottom: 8px;"
+                     id="attachment-file-input">
+              <br>
+              <button type="submit" class="ui small button" id="attachment-upload-btn">
+                <i class="upload icon"></i> 上传选中文件
+              </button>
+              <span id="attachment-upload-status" style="margin-left: 12px; color: #888;"></span>
+            </form>
+            <script>
+            (function() {
+              var form = document.getElementById('attachment-upload-form');
+              var btn = document.getElementById('attachment-upload-btn');
+              var input = document.getElementById('attachment-file-input');
+              var status = document.getElementById('attachment-upload-status');
+              if (!form) return;
+              var maxSizeMB = <%= typeof MAX_ATTACHMENT_SIZE_MB !== 'undefined' ? MAX_ATTACHMENT_SIZE_MB : 20 %>;
+
+              form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!input.files || input.files.length === 0) {
+                  status.textContent = '请先选择文件';
+                  status.style.color = '#db2828';
+                  return;
+                }
+                var maxSize = maxSizeMB * 1024 * 1024;
+                for (var i = 0; i < input.files.length; i++) {
+                  if (input.files[i].size > maxSize) {
+                    status.textContent = '文件 "' + input.files[i].name + '" 超过 ' + maxSizeMB + ' MB 限制';
+                    status.style.color = '#db2828';
+                    return;
+                  }
+                }
+
+                btn.disabled = true;
+                status.textContent = '上传中...';
+                status.style.color = '#888';
+
+                var fd = new FormData(form);
+                fetch(form.action, { method: 'POST', body: fd })
+                  .then(function(r) { return r.json(); })
+                  .then(function(d) {
+                    if (d.ok) {
+                      status.textContent = '上传成功!正在刷新...';
+                      status.style.color = '#21ba45';
+                      setTimeout(function() { location.reload(); }, 600);
+                    } else {
+                      status.textContent = '失败: ' + (d.message || '未知错误');
+                      status.style.color = '#db2828';
+                      btn.disabled = false;
+                    }
+                  })
+                  .catch(function(e) {
+                    status.textContent = '网络错误: ' + e.message;
+                    status.style.color = '#db2828';
+                    btn.disabled = false;
+                  });
+              });
+            })();
+            </script>
+          </div>
+        </div>
+      <% } else if (['closed', 'rejected', 'resolved'].includes(ticket.status)) { %>
+        <div class="ui icon message" style="margin-top: 20px;">
+          <i class="lock icon"></i>
+          <div class="content">
+            <div class="header">此工单已结案</div>
+            <p>状态为「<%= st.label %>」,无法再添加回复。</p>
+          </div>
+        </div>
+      <% } else if (isAdmin && ticket.assignee_id !== res.locals.user.id) { %>
+        <div class="ui icon message" style="margin-top: 20px;">
+          <i class="hand paper icon"></i>
+          <div class="content">
+            <div class="header">请先认领此工单</div>
+            <p>需要先认领此工单后才能进行回复或状态变更。</p>
+          </div>
+        </div>
+      <% } %>
+
+    </div>
+
+    <!-- 右侧:基本信息卡 + admin 操作面板 -->
+    <div class="five wide column">
+      <!-- 基本信息卡 -->
+      <div class="ui segment">
+        <h4 style="margin-top: 0;">基本信息</h4>
+        <table style="width: 100%;">
+          <tr>
+            <td style="color: #888; padding: 4px 0; vertical-align: top; width: 78px;">工单状态</td>
+            <td style="padding: 4px 0;">
+              <span class="ui mini <%= st ? st.color : 'grey' %> label">
+                <%= st ? st.label : ticket.status %>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td style="color: #888; padding: 4px 0; vertical-align: top;">创建者</td>
+            <td style="padding: 4px 0;">
+              <% if (creator) { %>
+                <%- syzoj.utils.renderUsername(creator) %>
+              <% } else { %>
+                <span style="color: #aaa;">(已删除)</span>
+              <% } %>
+            </td>
+          </tr>
+          <tr>
+            <td style="color: #888; padding: 4px 0; vertical-align: top;">责任人</td>
+            <td style="padding: 4px 0;">
+              <% if (assignee) { %>
+                <%- syzoj.utils.renderUsername(assignee) %>
+              <% } else { %>
+                <span style="color: #aaa;">暂无</span>
+              <% } %>
+            </td>
+          </tr>
+          <tr>
+            <td style="color: #888; padding: 4px 0; vertical-align: top;">工单类型</td>
+            <td style="padding: 4px 0;">
+              <%= cat ? cat.label : ticket.category %>
+              <% if (subInfo) { %> - <%= subInfo.label %><% } %>
+            </td>
+          </tr>
+          <% if (relationInfo) { %>
+            <tr>
+              <td style="color: #888; padding: 4px 0; vertical-align: top;">关联对象</td>
+              <td style="padding: 4px 0; word-break: break-all;">
+                <a href="<%= relationInfo.url %>" style="color: #21ba45;"><%= relationInfo.name %></a>
+              </td>
+            </tr>
+          <% } %>
+          <tr>
+            <td style="color: #888; padding: 4px 0; vertical-align: top;">创建时间</td>
+            <td style="padding: 4px 0;"><%= syzoj.utils.formatDate(ticket.created_at) %></td>
+          </tr>
+          <% if (ticket.updated_at !== ticket.created_at) { %>
+            <tr>
+              <td style="color: #888; padding: 4px 0; vertical-align: top;">最后更新</td>
+              <td style="padding: 4px 0;"><%= syzoj.utils.formatDate(ticket.updated_at) %></td>
+            </tr>
+          <% } %>
+        </table>
+        <div style="margin-top: 12px; color: #aaa; font-size: 0.85em; text-align: center;">
+          非公开工单
+        </div>
+      </div>
+
+      <!-- 额外字段(举报原因等) -->
+      <% if (Object.keys(extraData).length > 0) { %>
+        <div class="ui segment">
+          <h4 style="margin-top: 0;">附加信息</h4>
+          <% Object.keys(extraData).forEach(function(key) { %>
+            <div style="margin-bottom: 8px;">
+              <div style="color: #888; font-size: 0.85em;">
+                <% if (key === 'report_reason') { %>举报原因<% } else { %><%= key %><% } %>
+              </div>
+              <div style="color: #333; word-break: break-word;"><%= extraData[key] %></div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <!-- admin 操作面板 -->
+      <% if (isAdmin) { %>
+        <div class="ui segment">
+          <h4 style="margin-top: 0;"><i class="shield alternate icon"></i> 管理员操作</h4>
+
+          <!-- 认领按钮 -->
+          <% if (ticket.assignee_id !== res.locals.user.id) { %>
+            <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'assign']) %>"
+                  onsubmit="return confirm('<%= ticket.assignee_id ? '确定接手此工单吗?原处理人将被替换为您。' : '确定认领此工单吗?认领后才能回复和改状态。' %>');"
+                  style="margin-bottom: 12px;">
+              <button type="submit" class="ui fluid blue button">
+                <i class="hand paper icon"></i>
+                <%= ticket.assignee_id ? '接手此工单' : '认领此工单' %>
+              </button>
+            </form>
+          <% } else { %>
+            <!-- 状态变更按钮(已认领) -->
+            <% if (canChangeStatus && !['closed', 'rejected', 'resolved'].includes(ticket.status)) { %>
+              <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
+                    onsubmit="return confirm('确定将工单状态变更为「已处理」吗?变更后将不能再回复。');"
+                    style="margin-bottom: 8px;">
+                <input type="hidden" name="status" value="resolved">
+                <button type="submit" class="ui fluid green button">
+                  <i class="check circle icon"></i> 标记为已处理
+                </button>
+              </form>
+              <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
+                    onsubmit="return confirm('确定驳回此工单吗?变更后将不能再回复。');"
+                    style="margin-bottom: 8px;">
+                <input type="hidden" name="status" value="rejected">
+                <button type="submit" class="ui fluid red button">
+                  <i class="times circle icon"></i> 驳回工单
+                </button>
+              </form>
+              <% if (ticket.status !== 'in_progress') { %>
+                <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
+                      style="margin-bottom: 8px;">
+                  <input type="hidden" name="status" value="in_progress">
+                  <button type="submit" class="ui fluid basic button">
+                    <i class="spinner icon"></i> 设为处理中
+                  </button>
+                </form>
+              <% } %>
+            <% } else if (['closed', 'rejected', 'resolved'].includes(ticket.status)) { %>
+              <!-- 已结案,允许重新打开 -->
+              <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
+                    onsubmit="return confirm('确定重新打开此工单吗?');"
+                    style="margin-bottom: 8px;">
+                <input type="hidden" name="status" value="in_progress">
+                <button type="submit" class="ui fluid basic blue button">
+                  <i class="redo icon"></i> 重新打开
+                </button>
+              </form>
+            <% } %>
+          <% } %>
+
+          <!-- 危险区域:删除(仅 super admin) -->
+          <% if (res.locals.user.is_admin) { %>
+            <div class="ui divider"></div>
+            <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'delete']) %>"
+                  onsubmit="return confirm('真的要永久删除此工单吗?\n\n所有回复也会一并删除,此操作不可撤销!');"
+                  style="margin: 0;">
+              <button type="submit" class="ui fluid mini red basic button">
+                <i class="trash icon"></i> 永久删除工单
+              </button>
+            </form>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% include footer %>

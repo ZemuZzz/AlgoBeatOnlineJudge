@@ -95,7 +95,6 @@ app.get('/messages', async (req, res) => {
         unread: parseInt(r.unread) || 0
       });
     }
-    await syzoj.utils.enhanceUsers(conversations.map(c => c.partner));
     res.render('messages_inbox', {
       conversations: conversations
     });
@@ -146,7 +145,6 @@ app.get('/messages/with/:uid', async (req, res) => {
         .where('id IN (:...ids)', { ids: unreadIds })
         .execute();
     }
-    await syzoj.utils.enhanceUser(partner);
     // 检查能否回复(对方是否屏蔽)
     let canReply = await canSendTo(res.locals.user, partner);
 

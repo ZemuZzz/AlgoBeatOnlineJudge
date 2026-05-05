@@ -101,6 +101,80 @@
                     </div>
 
                 </div>
+
+                <%
+                // ============ Hit 值卡片数据准备 ============
+                let hitScores = (syzoj.userHitScores && syzoj.userHitScores.get(show_user.id)) || null;
+                let hitHidden = (syzoj.userHitHidden && syzoj.userHitHidden.has(show_user.id));
+                let hitTier = 'gray';
+                let hitTierLabel = '萌新';
+                let hitTotal = 0;
+                let isManager = show_user.is_admin || (syzoj.adminUserIds && syzoj.adminUserIds.has(show_user.id));
+                if (isManager) {
+                  hitTier = 'admin'; hitTierLabel = '管理员';
+                  hitTotal = hitScores ? hitScores.total : 0;
+                } else if (hitScores) {
+                  hitTotal = hitScores.total;
+                  if (hitTotal >= 350) { hitTier = 'red'; hitTierLabel = '大神'; }
+                  else if (hitTotal >= 280) { hitTier = 'orange'; hitTierLabel = '高手'; }
+                  else if (hitTotal >= 200) { hitTier = 'green'; hitTierLabel = '进阶'; }
+                  else if (hitTotal >= 100) { hitTier = 'blue'; hitTierLabel = '业余'; }
+                  else { hitTier = 'gray'; hitTierLabel = '萌新'; }
+                }
+                let tierBarColor = { gray:'grey', blue:'blue', green:'green', orange:'orange', red:'red', admin:'purple' }[hitTier] || 'grey';
+                let tierBarHex = { grey:'#999', blue:'#2185d0', green:'#21ba45', orange:'#f2711c', red:'#db2828', purple:'#a333c8' }[tierBarColor] || '#999';
+                let canViewHit = !hitHidden || (user && user.id === show_user.id);
+                %>
+                <% if (canViewHit) { %>
+                <div class="row">
+                    <div class="column">
+                        <h4 class="ui top attached block header">
+                            <i class="bullseye icon"></i> Hit 值
+                            <% if (hitHidden && user && user.id === show_user.id) { %>
+                              <span style="float: right; color: #888; font-weight: normal; font-size: 0.85em;">
+                                <i class="eye slash icon"></i> 仅自己可见
+                              </span>
+                            <% } %>
+                        </h4>
+                        <div class="ui bottom attached segment">
+                          <% if (hitScores) { %>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+                              <div>
+                                <span class="username-tier-<%= hitTier %>" style="font-size: 2em; font-weight: bold;"><%= hitTotal %></span>
+                                <span style="color: #999; font-size: 1em;">/ 400</span>
+                              </div>
+                              <span class="ui <%= tierBarColor %> label"><%= hitTierLabel %></span>
+                            </div>
+                            <% function renderHitBar(label, value, max) { %>
+                              <% let pct = max > 0 ? Math.round(value / max * 100) : 0; %>
+                              <div style="margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                  <span style="color: #666; font-size: 0.9em;"><%= label %></span>
+                                  <span style="color: #999; font-size: 0.85em;"><%= value %> / <%= max %></span>
+                                </div>
+                                <div style="background: #eee; border-radius: 4px; overflow: hidden; height: 10px;">
+                                  <div style="background: <%= tierBarHex %>; width: <%= pct %>%; height: 100%; transition: width 0.3s;"></div>
+                                </div>
+                              </div>
+                            <% } %>
+                            <%- renderHitBar('基础信用分', hitScores.basic_score, 100) %>
+                            <%- renderHitBar('社区贡献分', hitScores.contribution_score, 100) %>
+                            <%- renderHitBar('比赛参与分', hitScores.contest_score, 100) %>
+                            <%- renderHitBar('题目练习分', hitScores.practice_score, 100) %>
+                            <div style="text-align: right; color: #aaa; font-size: 0.8em; margin-top: 12px;">
+                              系统每日凌晨自动计算 · <a href="/help/hit-value" style="color: #aaa;">了解 Hit 值</a>
+                            </div>
+                          <% } else { %>
+                            <div style="color: #999; text-align: center; padding: 20px 0;">
+                              <i class="hourglass half icon"></i>
+                              该用户的 Hit 值尚未计算,请稍后再来。
+                            </div>
+                          <% } %>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
                 <div class="row">
                     <div class="column">
                         <h4 class="ui top attached block header">帖子</h4>

@@ -83,6 +83,14 @@ services:
       - ./custom/views/user.ejs:/app/views/user.ejs:ro
       - ./custom/views/statistics.ejs:/app/views/statistics.ejs:ro
       - ./custom/modules/_username_cache.js:/app/modules/_username_cache.js:ro
+      - ./custom/models-built/user-hit-score.js:/app/models-built/user-hit-score.js:ro
+      - ./custom/models-built/user-hit-score-history.js:/app/models-built/user-hit-score-history.js:ro
+      - ./custom/models/user-hit-score.ts:/app/models/user-hit-score.ts:ro
+      - ./custom/models/user-hit-score-history.ts:/app/models/user-hit-score-history.ts:ro
+      - ./custom/modules/__hit_score_engine.js:/app/modules/__hit_score_engine.js:ro
+      - ./custom/models-built/user-hit-setting.js:/app/models-built/user-hit-setting.js:ro
+      - ./custom/models/user-hit-setting.ts:/app/models/user-hit-setting.ts:ro
+      - ./custom/views/help_hit_value.ejs:/app/views/help_hit_value.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

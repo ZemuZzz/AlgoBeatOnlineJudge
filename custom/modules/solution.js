@@ -43,7 +43,6 @@ app.get('/problem/:pid/solutions', async (req, res) => {
       sol.user = await User.findById(sol.user_id);
       sol.allowedEdit = await sol.isAllowedEditBy(res.locals.user);
     }
-    await syzoj.utils.enhanceUsers(solutions.map(s => s.user));
     // 检查题目是否禁用了题解投稿
     let setting = await ProblemSolutionSetting.findOne({ where: { problem_id: pid } });
     let submissionDisabled = !!(setting && setting.disable_submission);
@@ -123,7 +122,6 @@ app.get('/solution/:id', async (req, res) => {
     }
 
     solution.user = await User.findById(solution.user_id);
-    await syzoj.utils.enhanceUser(solution.user);
     solution.allowedEdit = await solution.isAllowedEditBy(res.locals.user);
     solution.allowedComment = solution.isAllowedCommentBy(res.locals.user);
     solution.contentRendered = await syzoj.utils.markdown(solution.content || '');
@@ -143,7 +141,6 @@ app.get('/solution/:id', async (req, res) => {
       c.allowedEdit = await c.isAllowedEditBy(res.locals.user);
       c.contentRendered = await syzoj.utils.markdown(c.content || '');
     }
-    await syzoj.utils.enhanceUsers(comments.map(c => c.user));
     res.render('solution', {
       solution: solution,
       problem: problem,
@@ -344,7 +341,6 @@ app.get('/admin/solutions', async (req, res) => {
       sol.user = await User.findById(sol.user_id);
       sol.problem = await Problem.findById(sol.problem_id);
     }
-    await syzoj.utils.enhanceUsers(solutions.map(s => s.user));
     // 各状态计数(用于在标签上显示数字)
     let counts = {
       pending: await ProblemSolution.count({ status: 'pending' }),

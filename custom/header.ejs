@@ -80,7 +80,14 @@
                   <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
                   <a class="item" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
                   <% if (user.is_admin) { %>
+                    <div class="ui divider"></div>
                     <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
+                    <% if (user && user.is_admin) { %>
+                        <a class="item" href-post="<%= syzoj.utils.makeUrl(['admin', 'recalc-hit-scores']) %>"
+                            onclick="return confirm('确定立即重新计算所有用户的 Hit 值吗？这是后台异步任务,需要 10-30 秒。');">
+                            <i class="refresh icon"></i>重算 Hit 值
+                        </a>
+                    <% } %>
                     <div class="ui basic modal" id="modal-restart">
                       <div class="ui icon header">
                         <i class="redo icon"></i>

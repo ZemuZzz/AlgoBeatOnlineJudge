@@ -47,6 +47,7 @@
             <% } %>
         </div>
         <% } %>
+        
       <div class="inline field">
         <label class="ui header">公开 Email</label>
         <div class="ui toggle checkbox">
@@ -105,6 +106,27 @@
       </div>
       </div>
 		</form>
+
+    <% if (typeof edited_user !== 'undefined' && edited_user.id === user.id) { %>
+      <%
+      let hideHitCurrent = (typeof syzoj.userHitHidden !== 'undefined' && syzoj.userHitHidden.has(edited_user.id));
+      %>
+      <div class="ui divider" style="margin-top: 40px;"></div>
+      <h3 style="margin-top: 30px;"><i class="bullseye icon"></i> Hit 值显示设置</h3>
+      <form method="post" action="<%= syzoj.utils.makeUrl(['user', edited_user.id, 'hit-setting']) %>" class="ui form" style="margin-top: 15px;">
+        <div class="inline field">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" name="hide_hit" id="hide_hit_toggle" <% if (hideHitCurrent) { %>checked<% } %>>
+            <label for="hide_hit_toggle">在我的主页隐藏 Hit 值卡片</label>
+          </div>
+        </div>
+        <div style="color: #888; font-size: 0.9em; margin-top: 6px; padding-left: 30px;">
+          隐藏后，他人访问你的主页将看不到 Hit 卡片。Hit 值本身仍会被系统计算、并影响用户名颜色档。
+          <a href="/help/hit-value">了解 Hit 值</a>
+        </div>
+        <button type="submit" class="ui small primary button" style="margin-top: 15px;">保存 Hit 设置</button>
+      </form>
+    <% } %>
 	</div>
 </div>
 <script>
@@ -157,6 +179,7 @@ function check() {
 <script>
 $(function () {
 	$('.ui.dropdown:not(.simple)').dropdown();
+	$('.ui.toggle.checkbox').checkbox();
 });
 </script>
 <% include footer %>

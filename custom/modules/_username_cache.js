@@ -1,23 +1,27 @@
-// 全局缓存:有任意管理权限的用户 id 集合
+// 全局缓存:有任意管理权限或 is_admin 的用户 id 集合
 // 每 60 秒自动刷新一次
 let UserPrivilege = syzoj.model('user_privilege');
-
+let User = syzoj.model('user');
 const MGMT_PRIVS = ['manage_problem', 'manage_problem_tag', 'manage_user'];
 const REFRESH_INTERVAL_MS = 60 * 1000;
 
-// 全局 Set,放在 syzoj 上方便其他模块访问
 syzoj.adminUserIds = new Set();
 
 async function refreshAdminUserIds() {
   try {
-    let records = await UserPrivilege.createQueryBuilder()
+    let newSet = new Set();
+
+    // 1. 查 user_privilege 表里有 MGMT_PRIVS 的用户
+    let privRecords = await UserPrivilege.createQueryBuilder()
       .where('privilege IN (:...privs)', { privs: MGMT_PRIVS })
       .getMany();
+    for (let r of privRecords) newSet.add(r.user_id);
 
-    let newSet = new Set();
-    for (let r of records) {
-      newSet.add(r.user_id);
-    }
+    // 2. 用 raw SQL 查 super admin(绕过 typeorm boolean quirk)
+    let conn = require('typeorm').getConnection();
+    let superAdmins = await conn.query('SELECT id FROM user WHERE is_admin = 1');
+    for (let u of superAdmins) newSet.add(u.id);
+
     syzoj.adminUserIds = newSet;
     syzoj.log('[admin-cache] Refreshed: ' + newSet.size + ' privileged users');
   } catch (e) {
@@ -25,11 +29,6 @@ async function refreshAdminUserIds() {
   }
 }
 
-// 启动时立即加载一次
 refreshAdminUserIds();
-
-// 周期性刷新
 setInterval(refreshAdminUserIds, REFRESH_INTERVAL_MS);
-
-// 暴露手动触发刷新的接口(以后可在管理后台改完权限后调用)
 syzoj.refreshAdminUserIds = refreshAdminUserIds;

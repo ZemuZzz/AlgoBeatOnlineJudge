@@ -71,7 +71,7 @@
             %>
             <tr>
                                 <td><b><%= i %></b></td>
-                                <td><%- syzoj.utils.renderUsername(user) %></td>
+                                <td><img src="<%= syzoj.utils.gravatar(user.email, 24) %>" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"><%- syzoj.utils.renderUsername(user) %></td>
                                 <td class="font-content">
               <script id="user-infomation-script-<%= i %>" data-cfasync="false">
               (function () {

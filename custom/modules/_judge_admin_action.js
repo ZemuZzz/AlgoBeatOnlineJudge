@@ -13,12 +13,18 @@ async function refreshAdminActionCache() {
     let rows = await JudgeStateAdminAction.find({});
     let cheated = new Set();
     let cancelled = new Set();
+    let cheaters = new Set();
     for (let r of rows) {
-      if (r.action_type === 'cheated') cheated.add(r.judge_id);
-      else if (r.action_type === 'cancelled') cancelled.add(r.judge_id);
+      if (r.action_type === 'cheated') {
+        cheated.add(r.judge_id);
+        if (r.affected_user_id) cheaters.add(r.affected_user_id);
+      } else if (r.action_type === 'cancelled') {
+        cancelled.add(r.judge_id);
+      }
     }
     syzoj.cheatedJudgeIds = cheated;
     syzoj.cancelledJudgeIds = cancelled;
+    syzoj.cheaterUserIds = cheaters;
   } catch (e) {
     syzoj.log('[judge-admin-action] cache refresh failed: ' + e.message);
   }

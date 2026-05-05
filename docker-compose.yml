@@ -111,6 +111,11 @@ services:
       - ./custom/views/tickets.ejs:/app/views/tickets.ejs:ro
       - ./custom/views/ticket_new.ejs:/app/views/ticket_new.ejs:ro
       - ./custom/views/ticket.ejs:/app/views/ticket.ejs:ro
+      - ./custom/models-built/user-tag.js:/app/models-built/user-tag.js:ro
+      - ./custom/models/user-tag.ts:/app/models/user-tag.ts:ro
+      - ./custom/modules/_user_tag.js:/app/modules/_user_tag.js:ro
+      - ./custom/modules/_user_tag_loader.js:/app/modules/_user_tag_loader.js:ro
+      - ./custom/views/admin_user_tags.ejs:/app/views/admin_user_tags.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

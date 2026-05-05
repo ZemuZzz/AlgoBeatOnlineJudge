@@ -82,13 +82,24 @@
 <%
 let _cheatedIds = [];
 let _cancelledIds = [];
+let _cheaterUids = [];
 if (syzoj.cheatedJudgeIds) for (let id of syzoj.cheatedJudgeIds) _cheatedIds.push(id);
 if (syzoj.cancelledJudgeIds) for (let id of syzoj.cancelledJudgeIds) _cancelledIds.push(id);
+if (syzoj.cheaterUserIds) for (let id of syzoj.cheaterUserIds) _cheaterUids.push(id);
+
+let _userTagsObj = {};
+if (syzoj.userTags) {
+  for (let [uid, info] of syzoj.userTags) {
+    _userTagsObj[uid] = { text: info.text, tier: info.tier };
+  }
+}
 %>
 <script>
 window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
 window.__SYZOJ_CHEATED_JUDGE_IDS = <%- JSON.stringify(_cheatedIds) %>;
 window.__SYZOJ_CANCELLED_JUDGE_IDS = <%- JSON.stringify(_cancelledIds) %>;
+window.__SYZOJ_CHEATER_USER_IDS = <%- JSON.stringify(_cheaterUids) %>;
+window.__SYZOJ_USER_TAGS = <%- JSON.stringify(_userTagsObj) %>;
 </script>
 </head>
 <body style="position: relative; margin-top: 49px; height: calc(100% - 49px); overflow-y: overlay; ">
@@ -161,6 +172,7 @@ window.__SYZOJ_CANCELLED_JUDGE_IDS = <%- JSON.stringify(_cancelledIds) %>;
                   <% } %>
                   <% if (user.is_admin) { %>
                     <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'announcements']) %>"><i class="bullhorn icon"></i>公告管理</a>
+                    <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'user-tags']) %>"><i class="id badge icon"></i>牌子管理</a>
                   <% } %>
                   <a class="item" href-post="<%= syzoj.utils.makeUrl(['logout'], { url: req.originalUrl }) %>"><i class="power icon"></i>注销</a>
                 </div>

@@ -106,7 +106,113 @@
       </div>
       </div>
 		</form>
+<%
+    let _tagState = (typeof myTagState !== 'undefined') ? myTagState : null;
+    let _tagIsCheater = (typeof myTagIsCheater !== 'undefined') ? myTagIsCheater : false;
+    %>
+    <% if (_tagState && _tagState.hasPermission) { %>
+      <div class="ui segment" style="margin-top: 15px;">
+        <h4 style="margin-top: 0;"><i class="id badge icon"></i> 用户名牌子</h4>
+        <p style="color: #666; font-size: 0.92em;">
+          牌子会显示在你用户名的右侧。颜色与用户名颜色一致。最多 12 字符。
+          <% if (_tagState.isAutoFromAdmin) { %>
+            <br><i class="info circle icon"></i>
+            <span style="color: #2185d0;">您因拥有管理权限自动获得 tag 权限。</span>
+          <% } %>
+        </p>
 
+        <% if (_tagIsCheater) { %>
+          <div class="ui yellow message" style="margin-bottom: 12px;">
+            <i class="warning sign icon"></i>
+            <b>当前您的荣誉牌子被作弊者身份覆盖,在站内将显示为「作弊者」棕色标签。</b>
+            您依然可以编辑下方设置,作弊者标记被撤销后将立即恢复显示。
+          </div>
+        <% } %>
+
+        <form id="my-tag-form" style="margin: 0;">
+          <div class="ui form">
+            <div class="field">
+              <label>牌子文字</label>
+              <input type="text" id="my-tag-text-input" maxlength="12"
+                     value="<%= _tagState.record ? (_tagState.record.tag_text || '') : '管理员' %>"
+                     placeholder="<%= _tagState.isAutoFromAdmin ? '管理员' : '请填写要显示的文字...' %>"
+                     style="max-width: 220px;">
+              <span style="margin-left: 10px; color: #999; font-size: 0.85em;">
+                <span id="my-tag-char-count">0</span> / 12
+              </span>
+            </div>
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" id="my-tag-visible-input"
+                       <% if (!_tagState.record || _tagState.record.is_visible !== false) { %>checked<% } %>>
+                <label>在站内展示此牌子</label>
+              </div>
+            </div>
+            <button type="button" class="ui primary button" id="my-tag-save-btn">
+              <i class="save icon"></i> 保存牌子设置
+            </button>
+            <span id="my-tag-status" style="margin-left: 12px;"></span>
+          </div>
+        </form>
+
+        <script>
+        (function() {
+          var input = document.getElementById('my-tag-text-input');
+          var visible = document.getElementById('my-tag-visible-input');
+          var btn = document.getElementById('my-tag-save-btn');
+          var status = document.getElementById('my-tag-status');
+          var counter = document.getElementById('my-tag-char-count');
+
+          function updateCount() { counter.textContent = input.value.length; }
+          input.addEventListener('input', updateCount);
+          updateCount();
+
+          btn.addEventListener('click', function() {
+            btn.disabled = true;
+            status.textContent = '保存中...';
+            status.style.color = '#888';
+
+            var params = new URLSearchParams();
+            params.append('tag_text', input.value);
+            params.append('is_visible', visible.checked ? 'true' : 'false');
+
+            fetch('/api/my-tag', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params.toString()
+            })
+              .then(function(r) { return r.json(); })
+              .then(function(d) {
+                if (d.ok) {
+                  status.textContent = '保存成功! 刷新页面后生效';
+                  status.style.color = '#21ba45';
+                } else {
+                  status.textContent = '失败: ' + (d.message || '未知错误');
+                  status.style.color = '#db2828';
+                }
+                btn.disabled = false;
+              })
+              .catch(function(e) {
+                status.textContent = '网络错误: ' + e.message;
+                status.style.color = '#db2828';
+                btn.disabled = false;
+              });
+          });
+        })();
+        </script>
+      </div>
+    <% } else if (typeof edited_user !== 'undefined' && edited_user.id === user.id && _tagState && _tagState.isDisabled) { %>
+      <div class="ui segment" style="margin-top: 15px;">
+        <h4 style="margin-top: 0;"><i class="id badge icon"></i> 用户名牌子</h4>
+        <div class="ui red message">
+          <i class="ban icon"></i>
+          您的牌子使用权限已被超级管理员撤销
+          <% if (_tagState.record && _tagState.record.disabled_reason) { %>
+            <br><span style="color: #888;">原因: <%= _tagState.record.disabled_reason %></span>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
     <% if (typeof edited_user !== 'undefined' && edited_user.id === user.id) { %>
       <%
       let hideHitCurrent = (typeof syzoj.userHitHidden !== 'undefined' && syzoj.userHitHidden.has(edited_user.id));

@@ -43,10 +43,36 @@ Vue.component('submission-item', {
       return userUrl.replace('20000528', this.data.info.userId);
     },
     userTierClass() {
-      // 从全局 window 注入的 tier map 里查询(由 header.ejs 注入)
+      var uid = this.data.info.userId;
       var tiers = window.__SYZOJ_USER_TIERS || {};
-      var tier = tiers[this.data.info.userId] || 'default';
+      var cheaters = window.__SYZOJ_CHEATER_USER_IDS || [];
+      // admin tier 不受 cheater 影响(tier 数据由 header.ejs 注入,admin 已在 _tierMap 中)
+      if (tiers[uid] === 'admin') return 'username-tier-admin';
+      // 非 admin + cheater → 棕色
+      if (cheaters.indexOf(uid) !== -1) return 'username-tier-cheater';
+      var tier = tiers[uid] || 'default';
       return 'username-tier-' + tier;
+    },
+    userTagHtml() {
+      var uid = this.data.info.userId;
+      var tiers = window.__SYZOJ_USER_TIERS || {};
+      var cheaters = window.__SYZOJ_CHEATER_USER_IDS || [];
+      var tags = window.__SYZOJ_USER_TAGS || {};
+
+      // admin 优先(无视 cheater)
+      var isAdmin = (tiers[uid] === 'admin');
+
+      // 非 admin + cheater → 强制作弊者 tag
+      if (!isAdmin && cheaters.indexOf(uid) !== -1) {
+        return '<span class="user-name-tag tag-tier-cheater">作弊者</span>';
+      }
+
+      var t = tags[uid];
+      if (!t || !t.text) return '';
+      var safeText = String(t.text).replace(/[&<>"']/g, function(c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+      return '<span class="user-name-tag tag-tier-' + (t.tier || 'default') + '">' + safeText + '</span>';
     },
     cheatedClass() {
       var ids = window.__SYZOJ_CHEATED_JUDGE_IDS || [];
@@ -137,7 +163,9 @@ Vue.component('submission-item', {
     <% } %>
     {{ formatSize(data.info.codeSize, 1) }}
   </td>
-  <td><a :href="userLink" :class="userTierClass">{{ data.info.user }}</a></td>
+  <td>
+    <a :href="userLink" :class="userTierClass">{{ data.info.user }}</a><span v-html="userTagHtml"></span>
+  </td>
   <td>{{ data.info.submitTime }}</td>
   <td v-if="showRejudge">
     <a id="rejudge-button" :onclick="'check_rejudge(' + (statusString === 'Waiting' || statusString.startsWith('Running')).toString() + ')'" style="color: #000; " href="#"><i class="repeat icon"></i></a>

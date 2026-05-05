@@ -19,3 +19,57 @@ a.username-tier-green:hover,
 a.username-tier-orange:hover,
 a.username-tier-red:hover,
 a.username-tier-gray:hover { text-decoration: underline; }
+/* ============ 用户名 tag(v1.5.0) ============ */
+.user-name-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-left: 4px;
+  border-radius: 3px;
+  font-size: 0.78em;
+  font-weight: bold;
+  color: #fff;
+  vertical-align: 1px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.user-name-tag.tag-tier-default { background: #aaa; }
+.user-name-tag.tag-tier-gray    { background: #888; }
+.user-name-tag.tag-tier-blue    { background: #2185d0; }
+.user-name-tag.tag-tier-green   { background: #21ba45; }
+.user-name-tag.tag-tier-orange  { background: #f2711c; }
+.user-name-tag.tag-tier-red     { background: #db2828; }
+.user-name-tag.tag-tier-admin   { background: #a333c8; }
+/* ============ 作弊者(v1.5.0) ============ */
+.username-tier-cheater {
+  color: #8B4513; /* 棕色 */
+  font-weight: bold;
+  text-decoration: line-through;
+}
+a.username-tier-cheater:hover {
+  color: #6F3611;
+  text-decoration: line-through underline;
+}
+
+/* ============ 用户名 tag(v1.5.0) ============ */
+.user-name-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-left: 4px;
+  border-radius: 3px;
+  font-size: 0.78em;
+  font-weight: bold;
+  color: #fff;
+  vertical-align: 1px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.user-name-tag.tag-tier-default { background: #aaa; }
+.user-name-tag.tag-tier-gray    { background: #888; }
+.user-name-tag.tag-tier-blue    { background: #2185d0; }
+.user-name-tag.tag-tier-green   { background: #21ba45; }
+.user-name-tag.tag-tier-orange  { background: #f2711c; }
+.user-name-tag.tag-tier-red     { background: #db2828; }
+.user-name-tag.tag-tier-admin   { background: #a333c8; }
+.user-name-tag.tag-tier-cheater { background: #8B4513; }

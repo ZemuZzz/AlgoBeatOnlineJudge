@@ -1,0 +1,152 @@
+<% this.title = '用户名牌子管理' %>
+<% include header %>
+
+<div class="padding">
+  <h2 style="margin-bottom: 18px;"><i class="id badge icon"></i> 用户名牌子管理</h2>
+
+  <!-- 授权区 -->
+  <div class="ui top attached block header">
+    <i class="plus icon"></i> 授予用户 tag 权限
+  </div>
+  <div class="ui bottom attached segment">
+    <p style="color: #666;">
+      管理员(super admin 或拥有 manage_problem/manage_problem_tag/manage_user 权限的用户)
+      <b>自动获得</b> tag 权限,无需手动授予。这里仅用于授权普通用户。
+    </p>
+    <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', 'grant']) %>" class="ui form">
+      <div class="inline fields">
+        <div class="field">
+          <label>用户名</label>
+          <input type="text" name="username" placeholder="输入要授权的用户名">
+        </div>
+        <div class="field">
+          <label style="margin-left: 12px;">或 用户 ID</label>
+          <input type="text" name="user_id" placeholder="UID" style="width: 100px;">
+        </div>
+        <button type="submit" class="ui primary button">
+          <i class="check icon"></i> 授予 tag 权限
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 列表区 -->
+  <div class="ui top attached block header" style="margin-top: 25px;">
+    <i class="list icon"></i> 已有记录 (共 <%= records.length %> 条)
+  </div>
+  <div class="ui bottom attached segment" style="padding: 0;">
+    <% if (records.length === 0) { %>
+      <div style="text-align: center; padding: 30px; color: #999;">暂无记录</div>
+    <% } else { %>
+      <table class="ui very basic table" style="margin: 0;">
+        <thead>
+          <tr>
+            <th style="padding-left: 18px;">用户</th>
+            <th>当前 Tag</th>
+            <th>是否展示</th>
+            <th>授权来源</th>
+            <th>状态</th>
+            <th style="text-align: right; padding-right: 18px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let r of records) {
+            let u = userMap[r.user_id];
+            let granter = r.granted_by ? userMap[r.granted_by] : null;
+            let disabler = r.disabled_by ? userMap[r.disabled_by] : null;
+          %>
+            <tr>
+              <td style="padding-left: 18px;">
+                <% if (u) { %>
+                  <%- syzoj.utils.renderUsername(u) %>
+                  <span style="color: #999; font-size: 0.85em;"> (UID <%= u.id %>)</span>
+                <% } else { %>
+                  <span style="color: #aaa;">(用户已删除 UID <%= r.user_id %>)</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (r.tag_text) { %>
+                  <code style="padding: 2px 6px; background: #f5f5f5; border-radius: 3px;"><%= r.tag_text %></code>
+                <% } else { %>
+                  <span style="color: #aaa; font-style: italic;">(空)</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (r.is_visible) { %>
+                  <span style="color: #21ba45;">✓ 展示</span>
+                <% } else { %>
+                  <span style="color: #999;">— 隐藏</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (r.granted_by === null) { %>
+                  <span style="color: #2185d0;">自动(管理权限)</span>
+                <% } else if (granter) { %>
+                  超管 <%- syzoj.utils.renderUsername(granter, { noTag: true }) %>
+                  <% if (r.granted_at) { %>
+                    <br><span style="color: #999; font-size: 0.85em;">
+                      <%= syzoj.utils.formatDate(r.granted_at) %>
+                    </span>
+                  <% } %>
+                <% } else { %>
+                  超管 (UID <%= r.granted_by %>)
+                <% } %>
+              </td>
+              <td>
+                <% if (r.is_disabled) { %>
+                  <span class="ui mini red label">已禁用</span>
+                  <% if (r.disabled_reason) { %>
+                    <br><span style="color: #999; font-size: 0.85em;">原因: <%= r.disabled_reason %></span>
+                  <% } %>
+                  <% if (disabler && r.disabled_at) { %>
+                    <br><span style="color: #999; font-size: 0.8em;">
+                      由 <%= disabler.username %> 于 <%= syzoj.utils.formatDate(r.disabled_at) %>
+                    </span>
+                  <% } %>
+                <% } else { %>
+                  <span class="ui mini green label">正常</span>
+                <% } %>
+              </td>
+              <td style="text-align: right; padding-right: 18px;">
+                <% if (r.is_disabled) { %>
+                  <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', r.user_id, 'enable']) %>"
+                        style="display: inline; margin: 0;"
+                        onsubmit="return confirm('确定恢复此用户的 tag 权限吗?');">
+                    <button type="submit" class="ui mini green button">
+                      <i class="undo icon"></i> 恢复
+                    </button>
+                  </form>
+                <% } else if (u && !u.is_admin && u.id !== res.locals.user.id) { %>
+                  <button class="ui mini red button"
+                          onclick="document.getElementById('disable-form-<%= r.user_id %>').style.display = 'block';">
+                    <i class="ban icon"></i> 禁用
+                  </button>
+                  <div id="disable-form-<%= r.user_id %>" style="display: none; margin-top: 8px; text-align: left;">
+                    <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', r.user_id, 'disable']) %>"
+                          onsubmit="return confirm('确定禁用此用户的 tag 权限吗?');">
+                      <input type="text" name="reason" placeholder="原因(可选)"
+                             style="width: 100%; padding: 4px; margin-bottom: 4px;">
+                      <button type="submit" class="ui mini red button">
+                        <i class="check icon"></i> 确认禁用
+                      </button>
+                      <button type="button" class="ui mini basic button"
+                              onclick="document.getElementById('disable-form-<%= r.user_id %>').style.display = 'none';">
+                        取消
+                      </button>
+                    </form>
+                  </div>
+                <% } else { %>
+                  <span style="color: #aaa; font-size: 0.85em;">
+                    <% if (u && u.is_admin) { %>(超管)<% } else if (u && u.id === res.locals.user.id) { %>(自己)<% } %>
+                  </span>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+
+<% include footer %>

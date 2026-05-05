@@ -1,0 +1,21 @@
+/* 用户名颜色分档样式 */
+.username-tier-default { color: #555; font-weight: normal; text-decoration: none; }
+.username-tier-default:hover { text-decoration: underline; }
+
+.username-tier-unknown { color: #999; font-style: italic; }
+
+.username-tier-gray  { color: #999; font-weight: normal; }
+.username-tier-blue  { color: #2185d0; font-weight: bold; }
+.username-tier-green { color: #21ba45; font-weight: bold; }
+.username-tier-orange { color: #f2711c; font-weight: bold; }
+.username-tier-red   { color: #db2828; font-weight: bold; }
+
+.username-tier-admin { color: #a333c8; font-weight: bold; }
+.username-tier-admin:hover { color: #8e2cb0; }
+
+/* 让所有 tier 链接 hover 时有下划线 */
+a.username-tier-blue:hover,
+a.username-tier-green:hover,
+a.username-tier-orange:hover,
+a.username-tier-red:hover,
+a.username-tier-gray:hover { text-decoration: underline; }

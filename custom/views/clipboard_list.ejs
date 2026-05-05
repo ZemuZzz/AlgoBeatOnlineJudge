@@ -8,7 +8,7 @@
       <% if (isOwn) { %>
         我的剪贴板
       <% } else { %>
-        <a href="<%= syzoj.utils.makeUrl(['user', pageOwner.id]) %>" style="color: inherit;"><%= pageOwner.username %></a> 的公开剪贴板
+        <%- syzoj.utils.renderUsername(pageOwner) %> 的公开剪贴板
       <% } %>
     </h2>
     <% if (isOwn) { %>

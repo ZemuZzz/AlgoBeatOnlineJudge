@@ -74,6 +74,15 @@ services:
       - ./custom/views/email_verify_result.ejs:/app/views/email_verify_result.ejs:ro
       - ./custom/views/user_edit.ejs:/app/views/user_edit.ejs:ro
       - ./custom/node_modules:/app/custom-node-modules:ro
+      - ./custom/modules/_username_renderer.js:/app/modules/_username_renderer.js:ro
+      - ./custom/username_tiers.css:/app/static/self/username_tiers.css:ro
+      - ./custom/views/ranklist.ejs:/app/views/ranklist.ejs:ro
+      - ./custom/views/discussion.ejs:/app/views/discussion.ejs:ro
+      - ./custom/views/article.ejs:/app/views/article.ejs:ro
+      - ./custom/views/contest_ranklist.ejs:/app/views/contest_ranklist.ejs:ro
+      - ./custom/views/user.ejs:/app/views/user.ejs:ro
+      - ./custom/views/statistics.ejs:/app/views/statistics.ejs:ro
+      - ./custom/modules/_username_cache.js:/app/modules/_username_cache.js:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

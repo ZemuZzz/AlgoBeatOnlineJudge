@@ -66,13 +66,13 @@ if (isVJudge) testcases = [];
             <% if (problem.is_anonymous && !problem.allowedManage) { %>
               匿名
             <% } else { %>
-              <a href="<%= syzoj.utils.makeUrl(['user', problem.user_id]) %>"><%= problem.user.username %></a>
+              <%- syzoj.utils.renderUsername(problem.user) %>
             <% } %>
             </span>
             <% if (problem.allowedManage) { %>
                 <span class="ui label">公开者：
                 <% if (problem.publicizer) { %>
-                  <a href="<%= syzoj.utils.makeUrl(['user', problem.publicizer_id]) %>"><%= problem.publicizer.username %></a>
+                  <%- syzoj.utils.renderUsername(problem.publicizer) %>
                 <% } else { %>
                   未知
                 <% } %>

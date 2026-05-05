@@ -71,7 +71,7 @@
             </td>
             <td>
               <% if (sol.user) { %>
-                <a href="<%= syzoj.utils.makeUrl(['user', sol.user.id]) %>"><%= sol.user.username %></a>
+                <%- syzoj.utils.renderUsername(sol.user) %>
               <% } else { %>
                 <i>已删除</i>
               <% } %>

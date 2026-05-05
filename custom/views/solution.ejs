@@ -19,7 +19,7 @@
         <div style="color: #888; font-size: 0.9em;">
           作者：
           <% if (solution.user) { %>
-            <a href="<%= syzoj.utils.makeUrl(['user', solution.user.id]) %>"><%= solution.user.username %></a>
+            <%- syzoj.utils.renderUsername(solution.user) %>
           <% } else { %>
             <i>已删除</i>
           <% } %>
@@ -129,7 +129,7 @@
               <img src="<%= syzoj.utils.gravatar(c.user.email, 120) %>">
             </a>
             <div class="content">
-              <a class="author" href="<%= syzoj.utils.makeUrl(['user', c.user_id]) %>"><%= c.user.username %></a><% if (c.user.nameplate) { %><%- c.user.nameplate %><% } %>
+              <%- syzoj.utils.renderUsername(c.user) %>
               <div class="metadata">
                 <span class="date"><%= syzoj.utils.formatDate(c.public_time) %></span>
               </div>

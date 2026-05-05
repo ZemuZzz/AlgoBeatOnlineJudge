@@ -43,6 +43,7 @@ app.get('/clipboard/user/:uid', async (req, res) => {
   try {
     let uid = parseInt(req.params.uid);
     let owner = await User.findById(uid);
+    await syzoj.utils.enhanceUser(owner);
     if (!owner) throw new ErrorMessage('用户不存在。');
 
     let isOwn = res.locals.user && res.locals.user.id === uid;
@@ -89,8 +90,8 @@ app.get('/clipboard/:id', async (req, res) => {
         throw new ErrorMessage('您没有权限查看此剪贴板。');
       }
     }
-
     let owner = await User.findById(item.user_id);
+    await syzoj.utils.enhanceUser(owner);
     item.contentRendered = await syzoj.utils.markdown(item.content || '');
 
     // 给前端用的分享 URL(只在作者本人页面显示)
@@ -123,8 +124,9 @@ app.get('/clipboard/share/:token', async (req, res) => {
     if (!item.isShareLinkValid()) {
       throw new ErrorMessage('此分享链接已过期或已被撤销。');
     }
-
+    
     let owner = await User.findById(item.user_id);
+    await syzoj.utils.enhanceUser(owner);
     item.contentRendered = await syzoj.utils.markdown(item.content || '');
 
     res.render('clipboard_view', {

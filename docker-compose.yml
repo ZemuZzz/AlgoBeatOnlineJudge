@@ -65,6 +65,15 @@ services:
       - ./custom/views/clipboard_edit.ejs:/app/views/clipboard_edit.ejs:ro
       - ./custom/models-built/problem-solution-setting.js:/app/models-built/problem-solution-setting.js:ro
       - ./custom/models/problem-solution-setting.ts:/app/models/problem-solution-setting.ts:ro
+      - ./custom/models-built/email-verification-token.js:/app/models-built/email-verification-token.js:ro
+      - ./custom/models-built/user-email-status.js:/app/models-built/user-email-status.js:ro
+      - ./custom/models/email-verification-token.ts:/app/models/email-verification-token.ts:ro
+      - ./custom/models/user-email-status.ts:/app/models/user-email-status.ts:ro
+      - ./custom/modules/email_verification.js:/app/modules/email_verification.js:ro
+      - ./custom/views/email_verify_pending.ejs:/app/views/email_verify_pending.ejs:ro
+      - ./custom/views/email_verify_result.ejs:/app/views/email_verify_result.ejs:ro
+      - ./custom/views/user_edit.ejs:/app/views/user_edit.ejs:ro
+      - ./custom/node_modules:/app/custom-node-modules:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

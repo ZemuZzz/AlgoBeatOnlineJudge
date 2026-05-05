@@ -1,0 +1,24 @@
+<% this.title = '验证邮件已发送' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <i class="envelope outline icon" style="color: #2185d0;"></i>
+      验证邮件已发送
+    </div>
+    <p style="text-align: center; max-width: 480px; margin: 0 auto;">
+      我们已向 <b><%= email %></b> 发送了一封验证邮件,请检查收件箱(包括垃圾邮件文件夹),
+      点击邮件中的链接完成验证。
+    </p>
+    <p style="text-align: center; color: #888; font-size: 0.9em; max-width: 480px; margin: 12px auto 0;">
+      链接将于 24 小时后过期。如果没收到邮件,可在 1 分钟后重新发送。
+    </p>
+    <div style="text-align: center; margin-top: 20px;">
+      <a class="ui primary button" href="/">返回首页</a>
+      <a class="ui button" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>">个人资料</a>
+    </div>
+  </div>
+</div>
+
+<% include footer %>

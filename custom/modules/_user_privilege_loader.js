@@ -1,10 +1,12 @@
 // 给每个请求注入用户辅助信息到模板:
-// 1. user.privileges - 权限数组(让 EJS 同步判断权限)
+// 1. user.privileges - 权限数组
 // 2. res.locals.pendingSolutionsCount - 待审核题解数(仅审核者)
-// 3. res.locals.unreadMessagesCount - 未读站内信数(仅登录用户)
+// 3. res.locals.unreadMessagesCount - 未读站内信数
+// 4. user.is_email_verified - 邮箱是否已验证
 let UserPrivilege = syzoj.model('user_privilege');
 let ProblemSolution = syzoj.model('problem-solution');
 let PrivateMessage = syzoj.model('private-message');
+let UserEmailStatus = syzoj.model('user-email-status');
 
 app.use(async (req, res, next) => {
   try {
@@ -40,6 +42,15 @@ app.use(async (req, res, next) => {
     }
   } catch (e) {
     res.locals.unreadMessagesCount = 0;
+  }
+
+  try {
+    if (res.locals.user) {
+      let status = await UserEmailStatus.findOne({ where: { user_id: res.locals.user.id } });
+      res.locals.user.is_email_verified = !!(status && status.is_email_verified);
+    }
+  } catch (e) {
+    if (res.locals.user) res.locals.user.is_email_verified = false;
   }
 
   next();

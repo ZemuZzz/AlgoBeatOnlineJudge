@@ -5,11 +5,18 @@ let User = syzoj.model('user');
 // ---------- 工具函数 ----------
 
 // 检查能否给某用户发消息
-// 返回 { ok: bool, reason?: string }
 async function canSendTo(sender, receiver) {
   if (!sender) return { ok: false, reason: '请登录后继续。' };
   if (!receiver) return { ok: false, reason: '收件人不存在。' };
   if (sender.id === receiver.id) return { ok: false, reason: '不能给自己发送站内信。' };
+
+  // 检查发送方是否已验证邮箱(管理员豁免)
+  if (!sender.is_admin) {
+    if (!await syzoj.utils.isEmailVerified(sender.id)) {
+      return { ok: false, reason: '请先验证邮箱后再发送站内信。' };
+    }
+  }
+
   // 管理员可以无视屏蔽设置
   if (sender.is_admin) return { ok: true };
   // 检查接收方屏蔽设置

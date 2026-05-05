@@ -8,3 +8,10 @@
 SYZOJ_WEB_SECRET_SESSION=请替换为 64 位随机字符串
 SYZOJ_WEB_SECRET_JUDGE=请替换为 64 位随机字符串
 SYZOJ_WEB_SECRET_EMAIL=请替换为 64 位随机字符串
+
+# SMTP 邮件发送配置(用于邮箱验证)
+SYZOJ_WEB_SMTP_HOST=smtp.zoho.com.cn
+SYZOJ_WEB_SMTP_PORT=465
+SYZOJ_WEB_SMTP_USER=你的发件邮箱地址
+SYZOJ_WEB_SMTP_PASS=你的应用专用密码(不是登录密码)
+SYZOJ_WEB_SMTP_FROM_NAME=AlgoBeat Online Judge

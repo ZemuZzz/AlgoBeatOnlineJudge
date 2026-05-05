@@ -1,0 +1,25 @@
+<% this.title = success ? '邮箱验证成功' : '邮箱验证失败' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <% if (success) { %>
+        <i class="check circle outline icon" style="color: #21ba45;"></i>
+        邮箱验证成功
+      <% } else { %>
+        <i class="times circle outline icon" style="color: #db2828;"></i>
+        邮箱验证失败
+      <% } %>
+    </div>
+    <p style="text-align: center; max-width: 480px; margin: 0 auto;"><%= message %></p>
+    <div style="text-align: center; margin-top: 20px;">
+      <a class="ui primary button" href="/">返回首页</a>
+      <% if (!success && user) { %>
+        <a class="ui button" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>">前往个人资料重新发送</a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% include footer %>

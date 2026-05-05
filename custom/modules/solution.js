@@ -90,6 +90,13 @@ app.get('/problem/:pid/solution/new', async (req, res) => {
         '查看现有题解': syzoj.utils.makeUrl(['problem', pid, 'solutions'])
       });
     }
+    
+    // 检查邮箱是否已验证
+    if (!await syzoj.utils.isEmailVerified(res.locals.user.id)) {
+      throw new ErrorMessage('请先验证邮箱后再投稿题解。', {
+        '前往验证': syzoj.utils.makeUrl(['user', res.locals.user.id, 'edit'])
+      });
+    }
 
     res.redirect(syzoj.utils.makeUrl(['solution', 0, 'edit'], { pid: pid }));
   } catch (e) {

@@ -118,7 +118,7 @@
                   if (hitTotal >= 350) { hitTier = 'red'; hitTierLabel = '大神'; }
                   else if (hitTotal >= 280) { hitTier = 'orange'; hitTierLabel = '高手'; }
                   else if (hitTotal >= 200) { hitTier = 'green'; hitTierLabel = '进阶'; }
-                  else if (hitTotal >= 100) { hitTier = 'blue'; hitTierLabel = '业余'; }
+                  else if (hitTotal >= 100) { hitTier = 'blue'; hitTierLabel = '入门'; }
                   else { hitTier = 'gray'; hitTierLabel = '萌新'; }
                 }
                 let tierBarColor = { gray:'grey', blue:'blue', green:'green', orange:'orange', red:'red', admin:'purple' }[hitTier] || 'grey';
@@ -167,7 +167,7 @@
                           <% } else { %>
                             <div style="color: #999; text-align: center; padding: 20px 0;">
                               <i class="hourglass half icon"></i>
-                              该用户的 Hit 值尚未计算,请稍后再来。
+                              该用户的 Hit 值尚未计算，请稍后再来。
                             </div>
                           <% } %>
                         </div>
@@ -180,7 +180,7 @@
                         <div class="ui bottom attached segment">
                           <div id="hit-trend-empty" style="color: #999; text-align: center; padding: 20px 0; display: none;">
                             <i class="hourglass half icon"></i>
-                            历史数据还在积累中,请几天后再来查看趋势。
+                            历史数据还在积累中，请几天后再来查看趋势。
                           </div>
                           <div id="hit-trend-loading" style="color: #999; text-align: center; padding: 20px 0;">
                             <i class="spinner loading icon"></i> 加载中...

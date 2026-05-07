@@ -1,0 +1,21 @@
+<% this.title = title || '成功' %>
+<% include header %>
+<div class="ui positive icon message" style="margin: 20px;">
+  <i class="check circle icon"></i>
+  <div class="content">
+    <div class="header" style="margin-bottom: 10px;">
+      <%= message %>
+    </div>
+    <% if (details) { %>
+      <p><%= details %></p>
+    <% } %>
+    <p style="margin-top: 12px;">
+      <% if (nextUrls) { %>
+        <% for (let text in nextUrls) { %>
+          <a href="<%= nextUrls[text] %>" class="ui small green button" style="margin-right: 5px;"><%= text %></a>
+        <% } %>
+      <% } %>
+    </p>
+  </div>
+</div>
+<% include footer %>

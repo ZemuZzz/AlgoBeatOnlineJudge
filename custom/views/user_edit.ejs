@@ -29,7 +29,7 @@
 	    <% if (typeof edited_user !== 'undefined' && edited_user.id === user.id) { %>
             <div class="field">
             <label>邮箱验证状态</label>
-            <% if (user.is_email_verified) { %>
+            <% if (user.is_email_verified || (syzoj.verifiedUserIds && syzoj.verifiedUserIds.has(user.id))) { %>
                 <div class="ui green message" style="margin-top: 5px;">
                     <i class="check circle icon"></i>
                     <b>已验证</b> · 你已完成邮箱验证。
@@ -37,7 +37,7 @@
             <% } else { %>
                 <div class="ui yellow message" style="margin-top: 5px;">
                     <i class="warning circle icon"></i>
-                    <b>邮箱尚未验证。</b>未验证的账号无法使用部分功能(如投稿题解、发送站内信)。
+                    <b>邮箱尚未验证。</b>未验证的账号无法使用部分功能（如投稿题解、发送站内信）。
                     <div style="margin-top: 10px;">
                     <a class="ui small primary button" href-post="/email/send-verification">
                         <i class="envelope icon"></i> 发送验证邮件
@@ -124,8 +124,8 @@
         <% if (_tagIsCheater) { %>
           <div class="ui yellow message" style="margin-bottom: 12px;">
             <i class="warning sign icon"></i>
-            <b>当前您的荣誉牌子被作弊者身份覆盖,在站内将显示为「作弊者」棕色标签。</b>
-            您依然可以编辑下方设置,作弊者标记被撤销后将立即恢复显示。
+            <b>当前您的荣誉牌子被作弊者身份覆盖，在站内将显示为「作弊者」棕色标签。</b>
+            您依然可以编辑下方设置，作弊者标记被撤销后将立即恢复显示。
           </div>
         <% } %>
 
@@ -208,7 +208,7 @@
           <i class="ban icon"></i>
           您的牌子使用权限已被超级管理员撤销
           <% if (_tagState.record && _tagState.record.disabled_reason) { %>
-            <br><span style="color: #888;">原因: <%= _tagState.record.disabled_reason %></span>
+            <br><span style="color: #888;">原因： <%= _tagState.record.disabled_reason %></span>
           <% } %>
         </div>
       </div>
@@ -236,7 +236,7 @@
 	</div>
 </div>
 <script>
-var bakDefine = define;
+var bakDefine = (typeof define !== "undefined") ? define : undefined;
 define = undefined;
 </script>
 <script src="<%- lib('blueimp-md5/2.10.0/js/md5.min.js') %>"></script>

@@ -116,6 +116,11 @@ services:
       - ./custom/modules/_user_tag.js:/app/modules/_user_tag.js:ro
       - ./custom/modules/_user_tag_loader.js:/app/modules/_user_tag_loader.js:ro
       - ./custom/views/admin_user_tags.ejs:/app/views/admin_user_tags.ejs:ro
+      - ./custom/libs-built/judger.js:/app/libs/judger.js:ro
+      - ./custom/models-built/judge_state.js:/app/models-built/judge_state.js:ro
+      - ./custom/modules/_email_verified_cache.js:/app/modules/_email_verified_cache.js:ro
+      - ./custom/modules/_contest_cheater_cache.js:/app/modules/_contest_cheater_cache.js:ro
+      - ./custom/views/success.ejs:/app/views/success.ejs:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

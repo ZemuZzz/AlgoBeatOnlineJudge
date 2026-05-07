@@ -2,7 +2,7 @@
 <% include header %>
 
 <div class="padding">
-  <!-- 顶部:标题 + 新建按钮 -->
+  <!-- 顶部：标题 + 新建按钮 -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2 style="margin: 0;"><i class="ticket icon"></i> 工单列表</h2>
     <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['ticket', 'new']) %>">
@@ -15,7 +15,7 @@
     <% if (isAdmin) { %>
       <!-- Row 1: 视角筛选(仅 admin) -->
       <div style="margin-bottom: 10px;">
-        <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">视角:</span>
+        <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">视角：</span>
         <div class="ui small basic buttons">
           <a class="ui button <% if (filter === 'all') { %>active<% } %>"
              href="<%= syzoj.utils.makeUrl(['tickets'], { filter: 'all' }) %>">● 全部</a>
@@ -31,7 +31,7 @@
 
     <!-- Row 2: 类别筛选 -->
     <div style="margin-bottom: 10px;">
-      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">类别:</span>
+      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">类别：</span>
       <div class="ui small basic buttons">
         <a class="ui button <% if (!categoryFilter) { %>active<% } %>"
            href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %>">所有类别</a>
@@ -46,7 +46,7 @@
 
     <!-- Row 3: 状态筛选 -->
     <div>
-      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">状态:</span>
+      <span style="display: inline-block; min-width: 70px; color: #888; font-size: 0.9em;">状态：</span>
       <div class="ui small basic buttons">
         <a class="ui button <% if (!statusFilter) { %>active<% } %>"
            href="?<%= isAdmin ? 'filter=' + filter + '&' : '' %><%= categoryFilter ? 'category=' + categoryFilter + '&' : '' %>">所有状态</a>
@@ -109,15 +109,15 @@
                 </span>
                 <% if (subtypeName) { %><span style="margin-right: 8px;"><%= subtypeName %></span><% } %>
                 <% if (creator) { %>
-                  · 创建: <%- syzoj.utils.renderUsername(creator) %>
+                  · 创建： <%- syzoj.utils.renderUsername(creator) %>
                 <% } %>
                 <% if (assignee) { %>
-                  · 处理: <%- syzoj.utils.renderUsername(assignee) %>
+                  · 处理： <%- syzoj.utils.renderUsername(assignee) %>
                 <% } %>
               </div>
             </div>
 
-            <!-- 右侧:状态 + 编号 + 时间 -->
+            <!-- 右侧：状态 + 编号 + 时间 -->
             <div style="text-align: right; flex-shrink: 0; min-width: 130px;">
               <div style="margin-bottom: 4px;">
                 <span class="ui mini <%= st ? st.color : 'grey' %> label">

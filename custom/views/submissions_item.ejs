@@ -88,7 +88,18 @@ Vue.component('submission-item', {
       if (cs.indexOf(this.data.info.submissionId) !== -1) return '已取消';
       return '';
     },
+    displayScore() {
+      var ids = window.__SYZOJ_CHEATED_JUDGE_IDS || [];
+      if (ids.indexOf(this.data.info.submissionId) !== -1) return 0;
+      var cs = window.__SYZOJ_CANCELLED_JUDGE_IDS || [];
+      if (cs.indexOf(this.data.info.submissionId) !== -1) return 0;
+      return Math.floor(this.data.result.score || 0);
+    },
     scoreClass() {
+      var ids = window.__SYZOJ_CHEATED_JUDGE_IDS || [];
+      if (ids.indexOf(this.data.info.submissionId) !== -1) return "score_0";
+      var cs = window.__SYZOJ_CANCELLED_JUDGE_IDS || [];
+      if (cs.indexOf(this.data.info.submissionId) !== -1) return "score_0";
       return "score_" + (parseInt(this.data.result.score / 10) || 0).toString();
     }
   },
@@ -137,9 +148,9 @@ Vue.component('submission-item', {
 
   <template v-if="data.result">
   <% if (active === 'submissions') { %>
-  <td v-if="config.showScore"><a :href="submissionLink"><span class="score" :class="scoreClass">{{ Math.floor(data.result.score || 0) }}</span></a></td>
+  <td v-if="config.showScore"><a :href="submissionLink"><span class="score" :class="scoreClass">{{ displayScore }}</span></a></td>
   <% } else { %>
-  <td v-if="config.showScore"><span class="score" :class="scoreClass">{{ Math.floor(data.result.score || 0) }}</span></td>
+  <td v-if="config.showScore"><span class="score" :class="scoreClass">{{ displayScore }}</span></td>
   <% } %>
   <td v-if="config.showUsage">{{ (data.result.time || 0).toString() + ' ms' }}</td>
 

@@ -74,6 +74,12 @@ async function calcOneUser(user) {
     .where('cp.user_id = :uid', { uid: user.id })
     .andWhere('cp.score > 0')
     .getMany();
+    // [v1.5.1] 排除作弊比赛: 该用户在该比赛中有过 cheated 提交,则该比赛对其 Hit 比赛分无贡献
+  const _cheaterMap = syzoj.contestCheaterMap || new Map();
+  activeCps = activeCps.filter(cp => {
+    const cset = _cheaterMap.get(cp.contest_id);
+    return !cset || !cset.has(user.id);
+  });
 
   contestRaw += Math.min(activeCps.length * 2.5, 60);
 
@@ -295,10 +301,14 @@ app.post('/admin/recalc-hit-scores', async (req, res) => {
       syzoj.log('[hit-engine] Manual recalc failed: ' + e.message);
     });
 
-    res.render('error', {
-      err: new ErrorMessage('Hit 值重算已开始,这是后台异步任务,大约需要 10-30 秒完成。完成后内存缓存将自动刷新,可在用户主页查看新分数。', {
-        '返回首页': '/'
-      })
+    res.render('success', {
+      title: 'Hit 值重算',
+      message: 'Hit 值重算已开始',
+      details: '这是后台异步任务，大约需要 10-30 秒完成。完成后内存缓存将自动刷新，可在用户主页查看新分数。',
+      nextUrls: {
+        '返回首页': '/',
+        '返回后台': '/admin/info'
+      }
     });
   } catch (e) {
     syzoj.log(e);

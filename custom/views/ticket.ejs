@@ -8,7 +8,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
 %>
 
 <div class="padding">
-  <!-- 顶部:工单标题 + 编号 -->
+  <!-- 顶部：工单标题 + 编号 -->
   <div style="margin-bottom: 18px;">
     <div style="color: #888; font-size: 0.9em; margin-bottom: 6px;">
       <a href="<%= syzoj.utils.makeUrl(['tickets']) %>"><i class="angle left icon"></i>返回工单列表</a>
@@ -32,14 +32,14 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
   </div>
 
   <div class="ui grid">
-    <!-- 左侧:工单描述 + 附件 + 回复区 -->
+    <!-- 左侧：工单描述 + 附件 + 回复区 -->
     <div class="eleven wide column">
       <!-- 工单描述 -->
       <div class="ui top attached block header">
         <i class="info circle icon"></i> 工单描述
         <% if (canWithdraw) { %>
           <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'withdraw']) %>"
-                onsubmit="return confirm('确定撤回此工单吗?\n\n撤回后状态将变为「已关闭」,无法再修改或回复。');"
+                onsubmit="return confirm('确定撤回此工单吗？\n\n撤回后状态将变为「已关闭」，无法再修改或回复。');"
                 style="display: inline; float: right; margin: 0;">
             <button type="submit" class="ui mini grey button">
               <i class="undo icon"></i> 撤回工单
@@ -87,7 +87,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
               </div>
               <% if (att.uploader_id === res.locals.user.id || isAdmin) { %>
                 <form method="post" action="<%= syzoj.utils.makeUrl(['ticket-attachment', att.id, 'delete']) %>"
-                      onsubmit="return confirm('确定删除此附件吗?');"
+                      onsubmit="return confirm('确定删除此附件吗？');"
                       style="margin: 0; flex-shrink: 0;">
                   <button type="submit" class="ui mini basic red button" title="删除附件">
                     <i class="trash icon" style="margin: 0;"></i>
@@ -154,14 +154,14 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
         <div class="ui bottom attached segment">
           <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'reply']) %>" class="ui form">
             <div class="field">
-              <textarea name="content" rows="5" placeholder="支持 Markdown 语法。回复后无法编辑或删除,请谨慎填写。" required></textarea>
+              <textarea name="content" rows="5" placeholder="支持 Markdown 语法。回复后无法编辑或删除，请谨慎填写。" required></textarea>
             </div>
             <% if (isAdmin) { %>
               <div class="field">
                 <div class="ui checkbox">
                   <input type="checkbox" name="is_internal" id="is_internal_check">
                   <label for="is_internal_check" style="cursor: pointer;">
-                    标记为内部备注(仅其他 admin 可见,工单创建者看不到)
+                    标记为内部备注（仅其他超级管理员可见，工单创建者不可见）
                   </label>
                 </div>
               </div>
@@ -177,7 +177,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
             <h5 style="margin-bottom: 8px;">
               <i class="paperclip icon"></i> 上传附件
               <span style="color: #999; font-size: 0.85em; font-weight: normal;">
-                (单文件最大 <%= typeof MAX_ATTACHMENT_SIZE_MB !== 'undefined' ? MAX_ATTACHMENT_SIZE_MB : 20 %> MB,本工单累计最多 <%= typeof MAX_ATTACHMENT_FILES !== 'undefined' ? MAX_ATTACHMENT_FILES : 10 %> 个)
+                (单文件最大 <%= typeof MAX_ATTACHMENT_SIZE_MB !== 'undefined' ? MAX_ATTACHMENT_SIZE_MB : 20 %> MB，本工单累计最多 <%= typeof MAX_ATTACHMENT_FILES !== 'undefined' ? MAX_ATTACHMENT_FILES : 10 %> 个)
               </span>
             </h5>
             <form id="attachment-upload-form" method="post" enctype="multipart/form-data"
@@ -265,7 +265,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
 
     </div>
 
-    <!-- 右侧:基本信息卡 + admin 操作面板 -->
+    <!-- 右侧：基本信息卡 + admin 操作面板 -->
     <div class="five wide column">
       <!-- 基本信息卡 -->
       <div class="ui segment">
@@ -364,7 +364,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
             <!-- 状态变更按钮(已认领) -->
             <% if (canChangeStatus && !['closed', 'rejected', 'resolved'].includes(ticket.status)) { %>
               <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
-                    onsubmit="return confirm('确定将工单状态变更为「已处理」吗?变更后将不能再回复。');"
+                    onsubmit="return confirm('确定将工单状态变更为「已处理」吗？变更后将不能再回复。');"
                     style="margin-bottom: 8px;">
                 <input type="hidden" name="status" value="resolved">
                 <button type="submit" class="ui fluid green button">
@@ -372,7 +372,7 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
                 </button>
               </form>
               <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
-                    onsubmit="return confirm('确定驳回此工单吗?变更后将不能再回复。');"
+                    onsubmit="return confirm('确定驳回此工单吗？变更后将不能再回复。');"
                     style="margin-bottom: 8px;">
                 <input type="hidden" name="status" value="rejected">
                 <button type="submit" class="ui fluid red button">
@@ -389,9 +389,9 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
                 </form>
               <% } %>
             <% } else if (['closed', 'rejected', 'resolved'].includes(ticket.status)) { %>
-              <!-- 已结案,允许重新打开 -->
+              <!-- 已结案，允许重新打开 -->
               <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'status']) %>"
-                    onsubmit="return confirm('确定重新打开此工单吗?');"
+                    onsubmit="return confirm('确定重新打开此工单吗？');"
                     style="margin-bottom: 8px;">
                 <input type="hidden" name="status" value="in_progress">
                 <button type="submit" class="ui fluid basic blue button">
@@ -401,11 +401,11 @@ let subInfo = cat ? cat.subtypes.find(s => s.value === ticket.subtype) : null;
             <% } %>
           <% } %>
 
-          <!-- 危险区域:删除(仅 super admin) -->
+          <!-- 危险区域：删除(仅 super admin) -->
           <% if (res.locals.user.is_admin) { %>
             <div class="ui divider"></div>
             <form method="post" action="<%= syzoj.utils.makeUrl(['ticket', ticket.id, 'delete']) %>"
-                  onsubmit="return confirm('真的要永久删除此工单吗?\n\n所有回复也会一并删除,此操作不可撤销!');"
+                  onsubmit="return confirm('真的要永久删除此工单吗？\n\n所有回复也会一并删除，此操作不可撤销！');"
                   style="margin: 0;">
               <button type="submit" class="ui fluid mini red basic button">
                 <i class="trash icon"></i> 永久删除工单

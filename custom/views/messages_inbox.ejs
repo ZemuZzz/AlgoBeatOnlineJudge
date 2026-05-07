@@ -44,7 +44,7 @@
               <% if (c.last_message) { %>
                 <% let preview = (c.last_message.content || '').replace(/\n/g, ' ').substring(0, 80); %>
                 <% if (c.last_message.sender_id === user.id) { %>
-                  <span style="color: #999;">我:</span>
+                  <span style="color: #999;">我：</span>
                 <% } %>
                 <%= preview %><% if ((c.last_message.content || '').length > 80) { %>...<% } %>
               <% } %>

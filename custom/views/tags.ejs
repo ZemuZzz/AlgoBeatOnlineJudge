@@ -25,7 +25,7 @@ const GROUPS = [
     title: '算法细目',
     icon: 'cogs',
     description: '具体的算法或数据结构知识点。',
-    match: (tag) => !KNOWN_COLORS.includes(tag.color)
+    match: (tag) => !KNOWN_COLORS.includes(tag.color) && tag.name !== '暂无评定'
   },
   {
     key: 'type',
@@ -39,9 +39,9 @@ const GROUPS = [
     title: '题目难度',
     icon: 'star',
     description: '题目难度分级。颜色由浅到深表示难度递增。',
-    match: (tag) => ['red','orange','yellow','green','blue','purple','black'].includes(tag.color),
+    match: (tag) => ['red','orange','yellow','green','blue','purple','black'].includes(tag.color) || tag.name === '暂无评定',
     // 难度按预设颜色顺序排序
-    sortOrder: ['red','orange','yellow','green','blue','purple','black']
+    sortOrder: ['red','orange','yellow','green','blue','purple','black','']
   }
 ];
 

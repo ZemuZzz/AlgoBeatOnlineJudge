@@ -130,7 +130,7 @@ $(function () {
     </p>
     <form method="post"
           action="<%= syzoj.utils.makeUrl(['contest', contest.id, 'delete']) %>"
-          onsubmit="return confirm('真的要删除比赛「<%= contest.title %>」吗？\n\n此操作将删除:\n - 该比赛所有报名记录\n - 该比赛排行榜数据\n\n此操作不可撤销！');"
+          onsubmit="return confirm('真的要删除比赛「<%= contest.title %>」吗？\n\n此操作将删除：\n - 该比赛所有报名记录\n - 该比赛排行榜数据\n\n此操作不可撤销！');"
           style="margin: 0;">
       <button type="submit" class="ui red button">
         <i class="trash icon"></i> 删除此比赛

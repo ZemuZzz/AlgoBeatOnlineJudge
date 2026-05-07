@@ -7,6 +7,14 @@
     <meta name="viewport" content="width=1200">
     <title><%= title %> - <%= syzoj.config.title %></title>
     <link rel="icon" type="image/png" href="/self/favicon.png">
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S5PF5SMBP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5S5PF5SMBP');
+    </script>
     <link href="<%- lib('semantic-ui/2.4.1/semantic.min.css') %>" rel="stylesheet">
     <link href="<%- selfLib('syntect-tomorrow.css') %>?20220512" rel="stylesheet">
     <link href="/self/username_tiers.css?v=1" rel="stylesheet">
@@ -141,10 +149,13 @@ window.__SYZOJ_USER_TAGS = <%- JSON.stringify(_userTagsObj) %>;
                     <div class="ui divider"></div>
                     <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
                     <% if (user && user.is_admin) { %>
-                        <a class="item" href-post="<%= syzoj.utils.makeUrl(['admin', 'recalc-hit-scores']) %>"
-                            onclick="return confirm('确定立即重新计算所有用户的 Hit 值吗？这是后台异步任务,需要 10-30 秒。');">
+                        <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'recalc-hit-scores']) %>"
+                              onsubmit="return confirm('确定立即重新计算所有用户的 Hit 值吗？这是后台异步任务，需要 10-30 秒。');"
+                              style="margin: 0;">
+                          <button type="submit" class="item" style="background: none; border: none; cursor: pointer; padding: 11px 16px; width: 100%; text-align: left; font-family: inherit; font-size: 1em; color: rgba(0,0,0,0.87); display: flex; align-items: center;">
                             <i class="refresh icon"></i>重算 Hit 值
-                        </a>
+                          </button>
+                        </form>
                     <% } %>
                     <div class="ui basic modal" id="modal-restart">
                       <div class="ui icon header">

@@ -9,6 +9,7 @@ let isMarked = isAdminCheating || isAdminCancelled;
 let canManageAction = res.locals.user && (res.locals.user.is_admin ||
   (res.locals.user.privileges && res.locals.user.privileges.includes('manage_problem')));
 let markedDetail = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction) ? judgeAdminAction : null;
+let isCheated = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction && judgeAdminAction.action_type === 'cheated');
 %>
 <script src="<%- lib('textfit/2.3.1/textFit.min.js') %>"></script>
 <style>
@@ -46,13 +47,25 @@ let markedDetail = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction)
       <span style="font-size: 1.05em; vertical-align: middle;">
         <b>该提交已被标记为「<%= markedDetail.action_type === 'cheated' ? '作弊' : '取消评测' %>」</b>
         &nbsp; — &nbsp;
-        操作人: <a href="<%= syzoj.utils.makeUrl(['user', markedDetail.operator_id]) %>"><%= markedDetail.operator_username %></a>
+        操作人： <a href="<%= syzoj.utils.makeUrl(['user', markedDetail.operator_id]) %>"><%= markedDetail.operator_username %></a>
         &nbsp; · &nbsp;
-        时间: <%= syzoj.utils.formatDate(markedDetail.operator_time) %>
+        时间：<%= syzoj.utils.formatDate(markedDetail.operator_time) %>
         <% if (markedDetail.reason) { %>
-          <br><span style="color: #555;">原因: <%= markedDetail.reason %></span>
+          <br><span style="color: #555;">原因：<%= markedDetail.reason %></span>
         <% } %>
       </span>
+      <% if (markedDetail.action_type === 'cancelled' && res.locals.user 
+             && (res.locals.user.id === markedDetail.affected_user_id || canManageAction)) { %>
+        <div style="margin-top: 12px;">
+          <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'restore-and-rejudge']) %>"
+                onsubmit="return confirm('确定要重新评测这条提交吗？\n\n这会清除取消标记，重新放回评测队列。');"
+                style="margin: 0;">
+            <button type="submit" class="ui small blue button">
+              <i class="redo icon"></i> 重新评测此提交
+            </button>
+          </form>
+        </div>
+      <% } %>
     </div>
   <% } %>
 
@@ -61,7 +74,7 @@ let markedDetail = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction)
       <h4 style="margin-top: 0;"><i class="shield alternate icon"></i> 管理员操作</h4>
       <% if (!isMarked) { %>
         <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'admin-action']) %>"
-              onsubmit="return confirm('确定执行此操作吗?\n\n如果原本是 AC 提交且该用户对该题没有其他有效 AC,user.ac_num 将自动减 1。\nHit 值会在下次重算时自动过滤此提交。');"
+              onsubmit="return confirm('确定执行此操作吗？\n\n如果原本是 AC 提交且该用户对该题没有其他有效 AC，user.ac_num 将自动减 1。\nHit 值会在下次重算时自动过滤此提交。');"
               style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <input type="text" name="reason" placeholder="原因(可选)" maxlength="255" style="flex: 1; min-width: 200px; padding: 6px 10px;">
           <button type="submit" name="action_type" value="cheated" class="ui red button">
@@ -73,16 +86,27 @@ let markedDetail = (typeof judgeAdminAction !== 'undefined' && judgeAdminAction)
         </form>
         <p style="color: #888; font-size: 0.9em; margin: 8px 0 0 0;">
           <i class="info circle icon"></i>
-          标记后该提交会在站内显示为对应状态,并从该用户 Hit 值计算中剔除。如果原本是 AC,user.ac_num 也会同步调整。
+          标记后该提交会在站内显示为对应状态，并从该用户 Hit 值计算中剔除。如果原本是 AC 状态，user.ac_num 也会同步调整。
         </p>
       <% } else { %>
-        <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'admin-action', 'revoke']) %>"
-              onsubmit="return confirm('确定撤销此标记吗?\n\n该提交将恢复为原本的评测状态;如果当时减过 ac_num,会自动恢复。');"
-              style="margin: 0;">
-          <button type="submit" class="ui green button">
-            <i class="undo icon"></i> 撤销此标记
-          </button>
-        </form>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'admin-action', 'revoke']) %>"
+                onsubmit="return confirm('确定撤销此标记吗？\n\n该提交将恢复为原本的评测状态；如果当时减过 ac_num，会自动恢复。');"
+                style="margin: 0;">
+            <button type="submit" class="ui green button">
+              <i class="undo icon"></i> 撤销此标记
+            </button>
+          </form>
+          <% if (markedDetail && markedDetail.action_type === 'cancelled') { %>
+            <form method="post" action="<%= syzoj.utils.makeUrl(['submission', info.submissionId, 'restore-and-rejudge']) %>"
+                  onsubmit="return confirm('确定要重新评测这条提交吗？\n\n这会清除取消标记，重新放回评测队列。');"
+                  style="margin: 0;">
+              <button type="submit" class="ui blue button">
+                <i class="redo icon"></i> 重新评测
+              </button>
+            </form>
+          <% } %>
+        </div>
       <% } %>
     </div>
   <% } %>
@@ -275,6 +299,7 @@ const vueApp = new Vue({
     },
     code: <%- serializejs(preferFormattedCode && formattedCode !== null) -%> ? formattedCode : unformattedCode,
     currentFormatted: <%- serializejs(preferFormattedCode && formattedCode !== null) -%>,
+    <% if (typeof judgeAdminAction !== 'undefined' && judgeAdminAction && judgeAdminAction.action_type === 'cheated') { detailResult = null; } %>
     detailResult: <%- serializejs(detailResult) %>,
     displayConfig: displayConfig,
   },

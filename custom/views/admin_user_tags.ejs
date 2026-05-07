@@ -11,7 +11,7 @@
   <div class="ui bottom attached segment">
     <p style="color: #666;">
       管理员(super admin 或拥有 manage_problem/manage_problem_tag/manage_user 权限的用户)
-      <b>自动获得</b> tag 权限,无需手动授予。这里仅用于授权普通用户。
+      <b>自动获得</b> tag 权限，无需手动授予。这里仅用于授权普通用户。
     </p>
     <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', 'grant']) %>" class="ui form">
       <div class="inline fields">
@@ -96,7 +96,7 @@
                 <% if (r.is_disabled) { %>
                   <span class="ui mini red label">已禁用</span>
                   <% if (r.disabled_reason) { %>
-                    <br><span style="color: #999; font-size: 0.85em;">原因: <%= r.disabled_reason %></span>
+                    <br><span style="color: #999; font-size: 0.85em;">原因： <%= r.disabled_reason %></span>
                   <% } %>
                   <% if (disabler && r.disabled_at) { %>
                     <br><span style="color: #999; font-size: 0.8em;">
@@ -111,7 +111,7 @@
                 <% if (r.is_disabled) { %>
                   <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', r.user_id, 'enable']) %>"
                         style="display: inline; margin: 0;"
-                        onsubmit="return confirm('确定恢复此用户的 tag 权限吗?');">
+                        onsubmit="return confirm('确定恢复此用户的 tag 权限吗？');">
                     <button type="submit" class="ui mini green button">
                       <i class="undo icon"></i> 恢复
                     </button>
@@ -123,7 +123,7 @@
                   </button>
                   <div id="disable-form-<%= r.user_id %>" style="display: none; margin-top: 8px; text-align: left;">
                     <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'user-tags', r.user_id, 'disable']) %>"
-                          onsubmit="return confirm('确定禁用此用户的 tag 权限吗?');">
+                          onsubmit="return confirm('确定禁用此用户的 tag 权限吗？');">
                       <input type="text" name="reason" placeholder="原因(可选)"
                              style="width: 100%; padding: 4px; margin-bottom: 4px;">
                       <button type="submit" class="ui mini red button">

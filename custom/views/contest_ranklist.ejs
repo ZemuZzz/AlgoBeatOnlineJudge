@@ -1,6 +1,26 @@
 <% this.title = '排名 - ' + contest.title %>
 <% include header %>
+<%
+// [v1.5.1] 比赛排行榜:作弊用户分数清零, 总分=-1, 排到末尾
+const _cheaterSet = (syzoj.contestCheaterMap && syzoj.contestCheaterMap.get(contest.id)) || null;
+if (_cheaterSet && _cheaterSet.size > 0 && Array.isArray(ranklist)) {
+  for (let item of ranklist) {
+    if (_cheaterSet.has(item.user.id)) {
+      for (let pid in item.player.score_details) {
+        if (item.player.score_details[pid].score != null) item.player.score_details[pid].score = 0;
+        if (item.player.score_details[pid].weighted_score != null) item.player.score_details[pid].weighted_score = 0;
+        if (item.player.score_details[pid].accepted) item.player.score_details[pid].accepted = false;
+        if (item.player.score_details[pid].unacceptedCount) item.player.score_details[pid].unacceptedCount = 0;
+      }
+      item.player.score = -1;
+      item.player.isCheater = true;
+    }
+  }
+  ranklist.sort((a, b) => b.player.score - a.player.score);
+}
+%>
 <style>
+.ranklist-cheater td { background-color: #fdf6e3 !important; opacity: 0.6; }
 .submit_time {
   font-size: 0.8em;
   margin-top: 5px;
@@ -52,7 +72,7 @@
               i++;
               let latest = contest.start_time, timeSum = 0, unacceptedCount = 0;
             %>
-            <tr>
+            <tr<% if (item.player.isCheater) { %> class="ranklist-cheater"<% } %>>
                 <%
                   if (contest.type === 'noi' || contest.type === 'ioi') {
                     if (i === 1 || item.player.score !== lastItem.player.score) rank = i;
@@ -81,7 +101,7 @@
                   <%= rank %>
                   </div>
                 </td>
-                <td><%- syzoj.utils.renderUsername(item.user) %></td>
+                <td><%- syzoj.utils.renderUsername(item.user) %><% if (item.player.isCheater) { %> <span class="ui mini brown label">作弊</span><% } %></td>
                 <% if (contest.type === 'acm') { %>
                   <td>
                     <span class="score score_<%= parseInt((item.player.score / ranklist[0].player.score * 10) || 0) %>">

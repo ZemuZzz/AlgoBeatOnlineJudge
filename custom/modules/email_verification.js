@@ -44,18 +44,18 @@ async function sendVerificationEmail(req, user, email, token) {
   let html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 30px;">
       <h2 style="color: #2185d0;">邮箱验证</h2>
-      <p>你好 <b>${user.username}</b>,</p>
-      <p>感谢你注册 AlgoBeat Online Judge!请点击下方按钮完成邮箱验证:</p>
+      <p>你好 <b>${user.username}</b>，</p>
+      <p>感谢你注册 AlgoBeat Online Judge！请点击下方按钮完成邮箱验证：</p>
       <p style="text-align: center; margin: 30px 0;">
         <a href="${verifyUrl}" style="display: inline-block; padding: 12px 28px; background: #2185d0; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">
           验证邮箱
         </a>
       </p>
-      <p style="color: #888; font-size: 0.9em;">如果按钮无法点击,请复制以下链接到浏览器访问:<br>
+      <p style="color: #888; font-size: 0.9em;">如果按钮无法点击，请复制以下链接到浏览器访问：<br>
       <code style="word-break: break-all;">${verifyUrl}</code></p>
       <p style="color: #888; font-size: 0.9em;">此链接将于 <b>${TOKEN_TTL_HOURS} 小时</b>后过期。</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-      <p style="color: #999; font-size: 0.85em;">如果不是你本人操作,请忽略本邮件。</p>
+      <p style="color: #999; font-size: 0.85em;">如果不是你本人操作，请忽略本邮件。</p>
     </div>
   `;
 
@@ -173,6 +173,7 @@ app.get('/email/verify/:token', async (req, res) => {
     status.is_email_verified = true;
     status.verified_at = now;
     await status.save();
+    if (syzoj.utils.refreshVerifiedCache) await syzoj.utils.refreshVerifiedCache();
 
     res.render('email_verify_result', {
       success: true,

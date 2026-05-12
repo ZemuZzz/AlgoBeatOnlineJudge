@@ -121,6 +121,15 @@ var ProblemSolution = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], ProblemSolution.prototype, "reject_reason");
     __decorate([
+        TypeORM.Index(),
+        TypeORM.Column({ nullable: true, type: "integer" }),
+        __metadata("design:type", Number)
+    ], ProblemSolution.prototype, "reviewer_id");
+    __decorate([
+        TypeORM.Column({ nullable: true, type: "integer" }),
+        __metadata("design:type", Number)
+    ], ProblemSolution.prototype, "reviewed_at");
+    __decorate([
         TypeORM.Column({ "default": true, type: "boolean" }),
         __metadata("design:type", Boolean)
     ], ProblemSolution.prototype, "allow_comment");

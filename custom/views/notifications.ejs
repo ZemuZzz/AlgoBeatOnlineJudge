@@ -1,0 +1,92 @@
+<% this.title = '通知中心' %>
+<% include header %>
+
+<div class="padding">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <h2>
+      <i class="bell icon"></i>通知中心
+      <% if (unreadCount > 0) { %>
+        <span class="ui small red label" style="vertical-align: middle;"><%= unreadCount %> 条未读</span>
+      <% } %>
+    </h2>
+    <% if (totalCount > 0 && unreadCount > 0) { %>
+      <form method="post" action="<%= syzoj.utils.makeUrl(['notifications', 'read-all']) %>"
+            onsubmit="return confirm('确认将所有通知标记为已读吗？');"
+            style="margin: 0;">
+        <button type="submit" class="ui small primary button">
+          <i class="check icon"></i>全部标为已读
+        </button>
+      </form>
+    <% } %>
+  </div>
+
+  <div class="ui secondary pointing menu" style="margin-bottom: 20px;">
+    <a class="<%= filter === 'all' ? 'active item' : 'item' %>" href="<%= syzoj.utils.makeUrl(['notifications']) %>">
+      全部 <span class="ui mini label"><%= totalCount %></span>
+    </a>
+    <a class="<%= filter === 'unread' ? 'active item' : 'item' %>" href="<%= syzoj.utils.makeUrl(['notifications'], { filter: 'unread' }) %>">
+      未读 <% if (unreadCount > 0) { %><span class="ui mini red label"><%= unreadCount %></span><% } %>
+    </a>
+  </div>
+
+  <% if (notifications.length === 0) { %>
+    <div class="ui placeholder segment" style="margin-top: 30px;">
+      <div class="ui icon header">
+        <i class="bell slash outline icon"></i>
+        <% if (filter === 'unread') { %>
+          没有未读通知
+        <% } else { %>
+          暂无通知
+        <% } %>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="ui divided items">
+      <% for (let n of notifications) { %>
+        <div class="item" style="padding: 16px; border-radius: 6px; margin-bottom: 8px; <%= n.is_read ? 'background: #f9f9f9;' : 'background: #fff8e1; border-left: 3px solid #ffc107;' %>">
+          <div class="content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="flex: 1;">
+                <div style="font-weight: <%= n.is_read ? 'normal' : '600' %>; font-size: 1.05em; margin-bottom: 4px;">
+                  <% if (!n.is_read) { %>
+                    <span class="ui mini red empty circular label" style="margin-right: 6px;"></span>
+                  <% } %>
+                  <%= n.title %>
+                </div>
+                <% if (n.content) { %>
+                  <div style="color: #666; margin: 6px 0; font-size: 0.95em;">
+                    <%= n.content %>
+                  </div>
+                <% } %>
+                <div style="color: #999; font-size: 0.85em; margin-top: 6px;">
+                  <% if (n.actor) { %>
+                    来自 <%- syzoj.utils.renderUsername(n.actor) %> · 
+                  <% } %>
+                  <%= syzoj.utils.formatDate(n.created_at) %>
+                </div>
+              </div>
+              <div style="margin-left: 16px; display: flex; gap: 6px; align-items: center;">
+                <% if (n.source_url) { %>
+                  <form method="post" action="<%= syzoj.utils.makeUrl(['notification', n.id, 'read']) %>" style="margin: 0;">
+                    <button type="submit" class="ui small primary basic button">
+                      查看 <i class="arrow right icon"></i>
+                    </button>
+                  </form>
+                <% } %>
+                <form method="post" action="<%= syzoj.utils.makeUrl(['notification', n.id, 'delete']) %>"
+                      onsubmit="return confirm('确认删除此通知吗？');" style="margin: 0;">
+                  <button type="submit" class="ui small basic button" title="删除">
+                    <i class="trash icon" style="margin: 0; color: #999;"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

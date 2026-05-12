@@ -122,6 +122,10 @@ app.get('/solution/:id', async (req, res) => {
     }
 
     solution.user = await User.findById(solution.user_id);
+    // [v1.6.0] 加载审核员信息
+    if (solution.reviewer_id) {
+      solution.reviewer = await User.findById(solution.reviewer_id);
+    }
     solution.allowedEdit = await solution.isAllowedEditBy(res.locals.user);
     solution.allowedComment = solution.isAllowedCommentBy(res.locals.user);
     solution.contentRendered = await syzoj.utils.markdown(solution.content || '');
@@ -340,6 +344,10 @@ app.get('/admin/solutions', async (req, res) => {
     for (let sol of solutions) {
       sol.user = await User.findById(sol.user_id);
       sol.problem = await Problem.findById(sol.problem_id);
+      // [v1.6.0] 加载审核员信息
+      if (sol.reviewer_id) {
+        sol.reviewer = await User.findById(sol.reviewer_id);
+      }
     }
     // 各状态计数(用于在标签上显示数字)
     let counts = {
@@ -374,9 +382,23 @@ app.post('/solution/:id/approve', async (req, res) => {
     if (!solution) throw new ErrorMessage('无此题解。');
 
     solution.status = 'accepted';
+    solution.reviewer_id = res.locals.user.id;
+    solution.reviewed_at = parseInt((new Date()).getTime() / 1000);
     solution.reject_reason = null;
     solution.update_time = parseInt((new Date()).getTime() / 1000);
     await solution.save();
+    // [v1.6.0] 通知作者
+    try {
+      await syzoj.utils.createNotification({
+        recipientId: solution.user_id,
+        type: 'solution_approved',
+        title: '您的题解《' + (solution.title || '无标题') + '》已通过审核',
+        content: '审核员：' + res.locals.user.username,
+        sourceUrl: syzoj.utils.makeUrl(['solution', solution.id]),
+        sourceId: solution.id,
+        actorId: res.locals.user.id
+      });
+    } catch (e) { syzoj.log('[notification] solution_approved failed: ' + e.message); }
 
     res.redirect(syzoj.utils.makeUrl(['solution', solution.id]));
   } catch (e) {
@@ -401,9 +423,23 @@ app.post('/solution/:id/reject', async (req, res) => {
     if (reason.length > 255) reason = reason.substring(0, 255);
 
     solution.status = 'rejected';
+    solution.reviewer_id = res.locals.user.id;
+    solution.reviewed_at = parseInt((new Date()).getTime() / 1000);
     solution.reject_reason = reason;
     solution.update_time = parseInt((new Date()).getTime() / 1000);
     await solution.save();
+    // [v1.6.0] 通知作者
+    try {
+      await syzoj.utils.createNotification({
+        recipientId: solution.user_id,
+        type: 'solution_rejected',
+        title: '您的题解《' + (solution.title || '无标题') + '》未通过审核',
+        content: '审核员：' + res.locals.user.username + '\n原因：' + reason,
+        sourceUrl: syzoj.utils.makeUrl(['solution', solution.id]),
+        sourceId: solution.id,
+        actorId: res.locals.user.id
+      });
+    } catch (e) { syzoj.log('[notification] solution_rejected failed: ' + e.message); }
 
     res.redirect(syzoj.utils.makeUrl(['solution', solution.id]));
   } catch (e) {

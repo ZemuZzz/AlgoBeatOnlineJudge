@@ -45,6 +45,12 @@ services:
       - ./custom/views/index.ejs:/app/views/index.ejs:ro
       - ./custom/models-built/announcement.js:/app/models-built/announcement.js:ro
       - ./custom/models/announcement.ts:/app/models/announcement.ts:ro
+      - ./custom/models/notification.ts:/app/models/notification.ts:ro
+      - ./custom/models-built/homepage-banner.js:/app/models-built/homepage-banner.js:ro
+      - ./custom/models/homepage-banner.ts:/app/models/homepage-banner.ts:ro
+      - ./custom/uploads/banner:/app/static/self/banner
+      - ./custom/views/notifications.ejs:/app/views/notifications.ejs:ro
+      - ./custom/views/admin_banners.ejs:/app/views/admin_banners.ejs:ro
       - ./custom/modules/announcement.js:/app/modules/announcement.js:ro
       - ./custom/views/admin_announcements.ejs:/app/views/admin_announcements.ejs:ro
       - ./custom/views/admin_announcement_edit.ejs:/app/views/admin_announcement_edit.ejs:ro
@@ -76,6 +82,9 @@ services:
       - ./custom/node_modules:/app/custom-node-modules:ro
       - ./custom/modules/_username_renderer.js:/app/modules/_username_renderer.js:ro
       - ./custom/username_tiers.css:/app/static/self/username_tiers.css:ro
+      - ./custom/sidebar.css:/app/static/self/sidebar.css:ro
+      - ./custom/sidebar.js:/app/static/self/sidebar.js:ro
+      - ./custom/mobile.css:/app/static/self/mobile.css:ro
       - ./custom/views/ranklist.ejs:/app/views/ranklist.ejs:ro
       - ./custom/views/discussion.ejs:/app/views/discussion.ejs:ro
       - ./custom/views/article.ejs:/app/views/article.ejs:ro
@@ -121,6 +130,9 @@ services:
       - ./custom/modules/_email_verified_cache.js:/app/modules/_email_verified_cache.js:ro
       - ./custom/modules/_contest_cheater_cache.js:/app/modules/_contest_cheater_cache.js:ro
       - ./custom/views/success.ejs:/app/views/success.ejs:ro
+      - ./custom/models-built/notification.js:/app/models-built/notification.js:ro
+      - ./custom/modules/notification.js:/app/modules/notification.js:ro
+      - ./custom/modules/banner.js:/app/modules/banner.js:ro
     env_file: env-app
     environment:
       - TZ=Asia/Shanghai

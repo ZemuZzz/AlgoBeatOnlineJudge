@@ -40,6 +40,14 @@
         <% } else if (solution.status === 'withdrawn') { %>
           <span class="ui grey label">已撤回</span>
         <% } %>
+        <% if ((solution.status === 'accepted' || solution.status === 'rejected') && solution.reviewer) { %>
+          <div style="color: #888; font-size: 0.85em; margin-top: 6px;">
+            审核员：<%- syzoj.utils.renderUsername(solution.reviewer) %>
+            <% if (solution.reviewed_at) { %>
+              · <%= syzoj.utils.formatDate(solution.reviewed_at) %>
+            <% } %>
+          </div>
+        <% } %>
       </div>
     </div>
 

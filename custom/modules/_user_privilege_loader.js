@@ -43,6 +43,15 @@ app.use(async (req, res, next) => {
   } catch (e) {
     res.locals.unreadMessagesCount = 0;
   }
+  // [v1.6.0] 通知中心未读数
+  try {
+    res.locals.unreadNotificationsCount = 0;
+    if (res.locals.user && syzoj.utils.countUnreadNotifications) {
+      res.locals.unreadNotificationsCount = await syzoj.utils.countUnreadNotifications(res.locals.user.id);
+    }
+  } catch (e) {
+    res.locals.unreadNotificationsCount = 0;
+  }
 
   try {
     if (res.locals.user) {

@@ -1,6 +1,6 @@
 <% include util %>
 <!DOCTYPE html>
-<html lang="zh-CN" style="position: fixed; width: 100%; overflow: hidden; ">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
@@ -20,6 +20,8 @@
     <link href="/self/username_tiers.css?v=1" rel="stylesheet">
     <link href="<%- selfLib('style.css') %>?20181212" rel="stylesheet">
     <link href="<%- lib('morris.js/0.5.1/morris.css') %>" rel="stylesheet">
+    <link href="/self/sidebar.css?v=1.6.0" rel="stylesheet">
+    <link href="/self/mobile.css?v=1.6.0" rel="stylesheet">
     <% if (useLocalLibs || !syzoj.config.google_fonts || !['like-google-fonts', 'like-local', 'built-in'].includes(syzoj.config.google_fonts.type)) { %>
       <link href="<%- syzoj.utils.makeUrl(['google-fonts', 'fira-mono.css']) %>" rel="stylesheet">
       <link href="<%- syzoj.utils.makeUrl(['google-fonts', 'lato.css']) %>" rel="stylesheet">
@@ -42,20 +44,8 @@
       <link href="<%- this.builtInCdnUrl %>/google-fonts/exo-2.css" rel="stylesheet">
     <% } %>
     <script data-cfasync="false" src="<%- lib('jquery/3.3.1/jquery.min.js') %>"></script>
-    <% if (syzoj.config.google_analytics && syzoj.config.google_analytics !== 'UA-XXXXXXXX-X') { %>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-      ga('create', '<%= syzoj.config.google_analytics %>', 'auto');
-      ga('send', 'pageview');
-
-    </script>
-    <% } %>
     <%
-    // ============ 用户名颜色 tier 注入(给 Vue 组件用)============
+    // ============ 用户名颜色 tier 注入 ============
     let _tierMap = {};
     function _calcTier(userId, isAdminUser) {
         if (isAdminUser) return 'admin';
@@ -71,136 +61,164 @@
         }
         return 'default';
     }
-    // 1. admin 用户(优先级最高)
     if (syzoj.adminUserIds) {
         for (let uid of syzoj.adminUserIds) _tierMap[uid] = 'admin';
     }
-    // 2. Hit 值非 default 档的用户
     if (syzoj.userHitScores) {
         for (let [uid, scoreData] of syzoj.userHitScores) {
-            if (_tierMap[uid] === 'admin') continue; // admin 优先级更高
+            if (_tierMap[uid] === 'admin') continue;
             let t = _calcTier(uid, false);
-            if (t !== 'default' && t !== 'gray') {
-                // 只塞非 gray 档的(gray 跟 default 同色,省点字节)
-                _tierMap[uid] = t;
-            }
+            if (t !== 'default' && t !== 'gray') _tierMap[uid] = t;
         }
     }
-%>
-<%
-let _cheatedIds = [];
-let _cancelledIds = [];
-let _cheaterUids = [];
-if (syzoj.cheatedJudgeIds) for (let id of syzoj.cheatedJudgeIds) _cheatedIds.push(id);
-if (syzoj.cancelledJudgeIds) for (let id of syzoj.cancelledJudgeIds) _cancelledIds.push(id);
-if (syzoj.cheaterUserIds) for (let id of syzoj.cheaterUserIds) _cheaterUids.push(id);
-
-let _userTagsObj = {};
-if (syzoj.userTags) {
-  for (let [uid, info] of syzoj.userTags) {
-    _userTagsObj[uid] = { text: info.text, tier: info.tier };
-  }
-}
-%>
-<script>
-window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
-window.__SYZOJ_CHEATED_JUDGE_IDS = <%- JSON.stringify(_cheatedIds) %>;
-window.__SYZOJ_CANCELLED_JUDGE_IDS = <%- JSON.stringify(_cancelledIds) %>;
-window.__SYZOJ_CHEATER_USER_IDS = <%- JSON.stringify(_cheaterUids) %>;
-window.__SYZOJ_USER_TAGS = <%- JSON.stringify(_userTagsObj) %>;
-</script>
+    let _cheatedIds = [];
+    let _cancelledIds = [];
+    let _cheaterUids = [];
+    if (syzoj.cheatedJudgeIds) for (let id of syzoj.cheatedJudgeIds) _cheatedIds.push(id);
+    if (syzoj.cancelledJudgeIds) for (let id of syzoj.cancelledJudgeIds) _cancelledIds.push(id);
+    if (syzoj.cheaterUserIds) for (let id of syzoj.cheaterUserIds) _cheaterUids.push(id);
+    let _userTagsObj = {};
+    if (syzoj.userTags) {
+      for (let [uid, info] of syzoj.userTags) {
+        _userTagsObj[uid] = { text: info.text, tier: info.tier };
+      }
+    }
+    %>
+    <script>
+    window.__SYZOJ_USER_TIERS = <%- JSON.stringify(_tierMap) %>;
+    window.__SYZOJ_CHEATED_JUDGE_IDS = <%- JSON.stringify(_cheatedIds) %>;
+    window.__SYZOJ_CANCELLED_JUDGE_IDS = <%- JSON.stringify(_cancelledIds) %>;
+    window.__SYZOJ_CHEATER_USER_IDS = <%- JSON.stringify(_cheaterUids) %>;
+    window.__SYZOJ_USER_TAGS = <%- JSON.stringify(_userTagsObj) %>;
+    </script>
 </head>
-<body style="position: relative; margin-top: 49px; height: calc(100% - 49px); overflow-y: overlay; ">
-    <div class="ui fixed borderless menu" style="position: fixed; height: 49px; ">
-        <div class="ui container">
-            <a class="header item" href="/" style="display: flex; align-items: center; gap: 8px;">
-              <img src="/self/logo.png" style="height: 48px; width: auto;" alt="logo">
-              <span style="font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600;"><%= syzoj.config.title %></span>
-            </a>
-            <a class="item<% if (active === '') { %> active<% } %>" href="/"><i class="home icon"></i> 首页</a>
-            <a class="item<% if (active.startsWith('problem')) { %> active<% } %>" href="/problems"><i class="list icon"></i> 题库</a>
-            <a class="item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests"><i class="calendar icon"></i> 比赛</a>
-            <a class="item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions"><i class="tasks icon"></i> 评测</a>
-            <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="signal icon"></i> 排名</a>
-            <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="comments icon"></i> 讨论</a>
-            <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="help circle icon"></i> 帮助</a>
-            <a class="item<% if (active.startsWith('tags')) { %> active<% } %>" href="/tags" style="margin-right: 30px;"><i class="tags icon"></i> 标签</a>
-            <% if (user) { %>
-                <a class="item" href="<%= syzoj.utils.makeUrl(['tickets']) %>"><i class="ticket icon"></i>工单</a>
+<body class="algobeat-sidebar-layout">
+
+    <!-- ============ Top Bar ============ -->
+    <div class="ab-topbar">
+      <div class="ab-topbar-left">
+        <button type="button" class="ab-topbar-toggle" title="折叠/展开侧栏">
+          <i class="bars icon"></i>
+        </button>
+        <a href="/" class="ab-topbar-brand">
+          <img src="/self/logo.png" alt="logo">
+          <span class="ab-topbar-brand-name"><%= syzoj.config.title %></span>
+        </a>
+        <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
+          <a class="ab-topbar-contest-back" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>">
+            <i class="arrow left icon"></i>返回比赛
+          </a>
+        <% } %>
+      </div>
+      <div class="ab-topbar-right">
+        <% if (user) { %>
+          <a class="ab-topbar-icon" href="<%= syzoj.utils.makeUrl(['notifications']) %>" title="通知中心">
+            <i class="bell outline icon"></i>
+            <% if (typeof unreadNotificationsCount !== 'undefined' && unreadNotificationsCount > 0) { %>
+              <span class="ab-topbar-badge"><%= unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount %></span>
             <% } %>
-            <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
-              <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="arrow left icon"></i> 返回比赛</a>
+          </a>
+          <a class="ab-topbar-icon" href="/messages" title="站内信">
+            <i class="envelope outline icon"></i>
+            <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+              <span class="ab-topbar-badge"><%= unreadMessagesCount > 99 ? '99+' : unreadMessagesCount %></span>
             <% } %>
-            <div class="right menu">
-              <% if (user) { %>
-              <a class="item" href="/messages" title="站内信" style="position: relative;">
-                <i class="envelope outline icon" style="margin: 0;"></i>
-                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
-                <div class="floating ui red tiny circular label" style="top: 5px; left: 75%; padding: 4px 6px;"><%= unreadMessagesCount %></div>
-                <% } %>
-              </a>
-              <a href="<%= syzoj.utils.makeUrl(['user', user.id]) %>" style="color: inherit; ">
-              <div class="ui simple dropdown item">
-                <%= user.username %><% if (user.nameplate) { %><%- user.nameplate %><% } %> <i class="dropdown icon"></i>
-                <div class="menu">
-                  <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
-                  <a class="item" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
-                  <% if (user.is_admin) { %>
-                    <div class="ui divider"></div>
-                    <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
-                    <% if (user && user.is_admin) { %>
-                        <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'recalc-hit-scores']) %>"
-                              onsubmit="return confirm('确定立即重新计算所有用户的 Hit 值吗？这是后台异步任务，需要 10-30 秒。');"
-                              style="margin: 0;">
-                          <button type="submit" class="item" style="background: none; border: none; cursor: pointer; padding: 11px 16px; width: 100%; text-align: left; font-family: inherit; font-size: 1em; color: rgba(0,0,0,0.87); display: flex; align-items: center;">
-                            <i class="refresh icon"></i>重算 Hit 值
-                          </button>
-                        </form>
-                    <% } %>
-                    <div class="ui basic modal" id="modal-restart">
-                      <div class="ui icon header">
-                        <i class="redo icon"></i>
-                        <p style="margin-top: 15px; ">重启服务</p>
-                      </div>
-                      <div class="content" style="text-align: center; ">
-                        <p>确认重新启动 SYZOJ Web 服务吗？</p>
-                      </div>
-                      <div class="actions">
-                        <div class="ui red basic cancel inverted button">
-                          <i class="remove icon"></i>
-                          否
-                        </div>
-                        <a class="ui green ok inverted button" href-post="<%= syzoj.utils.makeUrl(['admin', 'restart'], { url: req.query['url'] || req.originalUrl }) %>">
-                          <i class="checkmark icon"></i>
-                          是
-                        </a>
-                      </div>
+          </a>
+          <div class="ui simple dropdown ab-topbar-user-dropdown">
+            <%= user.username %><% if (user.nameplate) { %><%- user.nameplate %><% } %>
+            <i class="dropdown icon"></i>
+            <div class="menu">
+              <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id]) %>"><i class="user icon"></i>我的主页</a>
+              <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
+              <a class="item" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
+              <% if (user.is_admin) { %>
+                <div class="ui divider"></div>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
+                <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'recalc-hit-scores']) %>"
+                      onsubmit="return confirm('确定立即重新计算所有用户的 Hit 值吗？这是后台异步任务，需要 10-30 秒。');"
+                      style="margin: 0;">
+                  <button type="submit" class="item" style="background: none; border: none; cursor: pointer; padding: 11px 16px; width: 100%; text-align: left; font-family: inherit; font-size: 1em; color: rgba(0,0,0,0.87); display: flex; align-items: center;">
+                    <i class="refresh icon"></i>重算 Hit 值
+                  </button>
+                </form>
+                <div class="ui basic modal" id="modal-restart">
+                  <div class="ui icon header">
+                    <i class="redo icon"></i>
+                    <p style="margin-top: 15px;">重启服务</p>
+                  </div>
+                  <div class="content" style="text-align: center;">
+                    <p>确认重新启动 SYZOJ Web 服务吗？</p>
+                  </div>
+                  <div class="actions">
+                    <div class="ui red basic cancel inverted button">
+                      <i class="remove icon"></i>否
                     </div>
-                    <a class="item" href="#" onclick="$('#modal-restart').modal('show')"><i class="redo icon"></i>重启服务</a>
-                  <% } %>
-                  <% if (user.is_admin || (user.privileges && user.privileges.includes('manage_problem'))) { %>
-                    <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'solutions']) %>"><i class="gavel icon"></i>题解审核</a>
-                  <% } %>
-                  <% if (user.is_admin) { %>
-                    <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'announcements']) %>"><i class="bullhorn icon"></i>公告管理</a>
-                    <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'user-tags']) %>"><i class="id badge icon"></i>牌子管理</a>
-                  <% } %>
-                  <a class="item" href-post="<%= syzoj.utils.makeUrl(['logout'], { url: req.originalUrl }) %>"><i class="power icon"></i>注销</a>
-                </div>
-              </div>
-              </a>
-                <% } else { %>
-                <div class="item">
-                    <a class="ui button" style="margin-right: 0.5em; " href="<%= syzoj.utils.makeUrl(['login'], { url: req.query['url'] || req.originalUrl }) %>">
-                        登录
+                    <a class="ui green ok inverted button" href-post="<%= syzoj.utils.makeUrl(['admin', 'restart'], { url: req.query['url'] || req.originalUrl }) %>">
+                      <i class="checkmark icon"></i>是
                     </a>
-                    <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['sign_up'], { url: req.query['url'] || req.originalUrl }) %>">
-                        注册
-                    </a>
+                  </div>
                 </div>
-                <% } %>
+                <a class="item" href="#" onclick="$('#modal-restart').modal('show')"><i class="redo icon"></i>重启服务</a>
+              <% } %>
+              <% if (user.is_admin || (user.privileges && user.privileges.includes('manage_problem'))) { %>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'solutions']) %>"><i class="gavel icon"></i>题解审核</a>
+              <% } %>
+              <% if (user.is_admin) { %>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'announcements']) %>"><i class="bullhorn icon"></i>公告管理</a>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'user-tags']) %>"><i class="id badge icon"></i>牌子管理</a>
+              <% } %>
+              <div class="ui divider"></div>
+              <a class="item" href-post="<%= syzoj.utils.makeUrl(['logout'], { url: req.originalUrl }) %>"><i class="power icon"></i>注销</a>
             </div>
-        </div>
+          </div>
+        <% } else { %>
+          <a class="ab-topbar-icon" href="<%= syzoj.utils.makeUrl(['login'], { url: req.query['url'] || req.originalUrl }) %>" style="padding: 6px 14px;">登录</a>
+          <a class="ab-topbar-icon" href="<%= syzoj.utils.makeUrl(['sign_up'], { url: req.query['url'] || req.originalUrl }) %>" style="padding: 6px 14px; background: #2185d0; color: white !important;">注册</a>
+        <% } %>
+      </div>
     </div>
-    <div style="margin-top: 28px; ">
+
+    <!-- ============ Side Bar ============ -->
+    <aside class="ab-sidebar">
+      <a href="/" class="ab-sidebar-header">
+        <img src="/self/logo.png" alt="logo">
+      </a>
+      <nav class="ab-sidebar-nav">
+        <a class="ab-sidebar-item<% if (active === '') { %> active<% } %>" href="/">
+          <i class="home icon"></i><span class="ab-sidebar-label">首页</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('problem')) { %> active<% } %>" href="/problems">
+          <i class="list icon"></i><span class="ab-sidebar-label">题库</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests">
+          <i class="calendar icon"></i><span class="ab-sidebar-label">比赛</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions">
+          <i class="tasks icon"></i><span class="ab-sidebar-label">评测</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist">
+          <i class="signal icon"></i><span class="ab-sidebar-label">排名</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global">
+          <i class="comments icon"></i><span class="ab-sidebar-label">讨论</span>
+        </a>
+        <a class="ab-sidebar-item<% if (active.startsWith('tags')) { %> active<% } %>" href="/tags">
+          <i class="tags icon"></i><span class="ab-sidebar-label">标签</span>
+        </a>
+        <% if (user) { %>
+          <a class="ab-sidebar-item" href="<%= syzoj.utils.makeUrl(['tickets']) %>">
+            <i class="ticket icon"></i><span class="ab-sidebar-label">工单</span>
+          </a>
+        <% } %>
+        <a class="ab-sidebar-item<% if (active.startsWith('help')) { %> active<% } %>" href="/help">
+          <i class="help circle icon"></i><span class="ab-sidebar-label">帮助</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ============ Backdrop (移动端遮罩) ============ -->
+    <div class="ab-backdrop"></div>
+
+    <!-- ============ Main Content ============ -->
+    <div style="margin-top: 0;">
     <div class="ui main container">

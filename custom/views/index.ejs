@@ -1,6 +1,9 @@
 <% this.title = '首页'; %>
 <% include header %>
-<div class="padding">
+
+<div class="padding" style="padding: 16px 20px;">
+
+  <!-- ============ 顶部状态提示 ============ -->
   <% if (typeof pendingSolutionsCount !== 'undefined' && pendingSolutionsCount > 0) { %>
     <div class="ui yellow message" style="margin-bottom: 15px;">
       <i class="bell icon"></i>
@@ -8,76 +11,48 @@
       <a href="<%= syzoj.utils.makeUrl(['admin', 'solutions']) %>" style="margin-left: 8px;">前往审核 →</a>
     </div>
   <% } %>
-  <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
-    <div class="ui blue message" style="margin-bottom: 15px;">
-      <i class="envelope icon"></i>
-      你有 <b><%= unreadMessagesCount %></b> 条未读站内信。
-      <a href="<%= syzoj.utils.makeUrl(['messages']) %>" style="margin-left: 8px;">前往查看 →</a>
-    </div>
-  <% } %>
-  <!-- ============ 公告弹窗容器 ============ -->
-  <div id="announcement-modal-container"></div>
 
+  <!-- ============ 公告弹窗(保留原逻辑) ============ -->
+  <div id="announcement-modal-container"></div>
   <script>
   (function () {
     'use strict';
-
     var STORAGE_KEY = 'algobeat_dismissed_announcements';
-
     function getDismissed() {
-      try {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
-      } catch (e) {
-        return {};
-      }
+      try { var raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : {}; }
+      catch (e) { return {}; }
     }
-
     function setDismissed(dict) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dict));
-      } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(dict)); } catch (e) {}
     }
-
-    // 清理已经过期的记录(end_time 已过的公告 id 从 localStorage 中删掉)
     function cleanExpiredDismissed(announcements) {
-      var dict = getDismissed();
-      var liveIds = {};
+      var dict = getDismissed(), liveIds = {};
       announcements.forEach(function (a) { liveIds[a.id] = true; });
       var changed = false;
       Object.keys(dict).forEach(function (id) {
-        if (!liveIds[id]) {
-          delete dict[id];
-          changed = true;
-        }
+        if (!liveIds[id]) { delete dict[id]; changed = true; }
       });
       if (changed) setDismissed(dict);
     }
-
     function levelToColor(level) {
       if (level === 'important') return 'red';
       if (level === 'warning') return 'yellow';
       return 'blue';
     }
-
     function levelToIcon(level) {
       if (level === 'important') return 'exclamation circle';
       if (level === 'warning') return 'warning sign';
       return 'info circle';
     }
-
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, function (m) {
         return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
       });
     }
-
     function showAnnouncement(a, onClose) {
       var color = levelToColor(a.level);
       var icon = levelToIcon(a.level);
-
-      var html =
-        '<div class="ui ' + color + ' modal announcement-modal" style="margin-top: 0 !important;">' +
+      var html = '<div class="ui ' + color + ' modal announcement-modal" style="margin-top: 0 !important;">' +
         '  <div class="header" style="display: flex; align-items: center; gap: 10px;">' +
         '    <i class="' + icon + ' icon"></i>' +
         '    <span>' + escapeHtml(a.title) + '</span>' +
@@ -93,10 +68,8 @@
         '    <div class="ui ' + color + ' ok button">我已知晓</div>' +
         '  </div>' +
         '</div>';
-
       var $m = $(html);
       $('#announcement-modal-container').append($m);
-
       $m.modal({
         closable: true,
         onHidden: function () {
@@ -111,31 +84,89 @@
         }
       }).modal('show');
     }
-
     function showQueue(list) {
       if (list.length === 0) return;
       var head = list.shift();
-      showAnnouncement(head, function () {
-        showQueue(list);
-      });
+      showAnnouncement(head, function () { showQueue(list); });
     }
-
     $(function () {
       $.getJSON('/api/active-announcements', function (data) {
         if (!data || !data.announcements) return;
         var all = data.announcements;
         cleanExpiredDismissed(all);
-
         var dict = getDismissed();
         var toShow = all.filter(function (a) { return !dict[a.id]; });
         if (toShow.length === 0) return;
-
         showQueue(toShow);
       });
     });
   })();
   </script>
-  <div class="ui three column grid">
+
+  <!-- ============ 顶部:Banner 轮播 + 今日运势 + 近期比赛 ============ -->
+  <div class="ui grid ab-home-top-grid" style="margin-bottom: 8px;">
+    <div class="eleven wide column">
+      <div class="ab-banner-wrap" id="ab-banner-wrap">
+        <div class="ab-banner-empty" id="ab-banner-empty">加载中...</div>
+        <button class="ab-banner-arrow left" id="ab-banner-prev" type="button" aria-label="上一张">‹</button>
+        <button class="ab-banner-arrow right" id="ab-banner-next" type="button" aria-label="下一张">›</button>
+        <div class="ab-banner-dots" id="ab-banner-dots"></div>
+      </div>
+    </div>
+
+    <div class="five wide column">
+
+      <!-- 近期比赛(紧凑版) -->
+      <h4 class="ui top attached block header" style="margin-top: 14px;"><i class="ui calendar icon"></i>近期比赛</h4>
+      <div class="ui bottom attached segment" style="padding: 10px 12px; flex: 2;">
+        <% if (!contests || !contests.length) { %>
+          <div style="text-align: center; color: #999; padding: 8px 0;">暂无比赛</div>
+        <% } else { %>
+          <% for (let contest of contests) {
+            let now = syzoj.utils.getCurrentDate();
+            let statusLabel, statusColor;
+            if (now < contest.start_time) { statusLabel = '未开始'; statusColor = 'red'; }
+            else if (now < contest.end_time) { statusLabel = '进行中'; statusColor = 'green'; }
+            else { statusLabel = '已结束'; statusColor = 'grey'; }
+            let typeLabel = '';
+            if (contest.type === 'noi') typeLabel = 'NOI';
+            else if (contest.type === 'ioi') typeLabel = 'IOI';
+            else if (contest.type === 'acm') typeLabel = 'ICPC';
+          %>
+            <a class="ab-contest-mini" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>">
+              <div class="ab-contest-mini-title"><%= contest.title %></div>
+              <div class="ab-contest-mini-meta">
+                <% if (typeLabel) { %><span class="ui mini label" style="background: #1565c0; color: white;"><%= typeLabel %></span><% } %>
+                <span class="ui mini <%= statusColor %> label"><%= statusLabel %></span>
+                <span class="ab-contest-mini-time"><%= syzoj.utils.formatDate(contest.start_time) %></span>
+              </div>
+            </a>
+          <% } %>
+        <% } %>
+      </div>
+
+      <!-- 一言 -->
+      <h4 class="ui top attached block header" style="margin-top: 14px;"><i class="ui quote left icon"></i>一言（ヒトコト）</h4>
+      <div class="ui bottom attached center aligned segment" style="padding: 14px; flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0;">
+        <div class="ui active centered inline loader" id="hitokoto-loader"></div>
+        <script>
+        $.get('https://v1.hitokoto.cn/?c=a', function (data) {
+          if (typeof data === 'string') data = JSON.parse(data);
+          $('#hitokoto-loader').removeClass('active');
+          $('#hitokoto-content').css('display', '').text(data.hitokoto);
+          if (data.from) $('#hitokoto-from').css('display', '').text('——' + data.from);
+        });
+        </script>
+        <div style="font-size: 1em; line-height: 1.5em; display: none;" id="hitokoto-content"></div>
+        <div style="text-align: right; margin-top: 10px; font-size: 0.9em; color: #666; display: none;" id="hitokoto-from"></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ============ 公告 + 右侧栏 ============ -->
+  <div class="ui grid" style="margin-top: 8px;">
     <div class="eleven wide column">
       <h4 class="ui top attached block header"><i class="ui info icon"></i>公告</h4>
       <div class="ui bottom attached segment">
@@ -143,235 +174,148 @@
           <thead>
             <tr>
               <th>标题</th>
-              <th>时间</th>
+              <th style="width: 180px;">时间</th>
             </tr>
           </thead>
           <tbody>
             <% for (let item of notices) { %>
-                <tr>
-                    <td><a href="<%= item.url %>"><%= item.title %></a></td>
-                    <td><%= item.date %></td>
-                </tr>
+              <tr>
+                <td><a href="<%= item.url %>"><%= item.title %></a></td>
+                <td><%= item.date %></td>
+              </tr>
             <% } %>
           </tbody>
         </table>
       </div>
-      <h4 class="ui top attached block header"><i class="ui signal icon"></i>排名</h4>
-      <div class="ui bottom attached segment">
-        <table class="ui very basic center aligned table" style="table-layout: fixed; ">
-          <thead>
-            <tr>
-	            <th style="width: 50px; ">#</th>
-	            <th style="width: 170px; ">用户名</th>
-	            <th>个性签名</th>
-            </tr>
-          </thead>
-          <script data-cfasync="false">
-          var lineHeight = 0;
-          (function () {
-            var div = document.createElement('div');
-            div.style.position = 'fixed';
-            div.style.left = -10000;
-            div.style.visibility = 'hidden';
-            div.innerText = '测试，Test.';
-            document.body.appendChild(div);
-            lineHeight = div.clientHeight;
-          })();
-          </script>
-          <tbody>
-            <%
-            let i = 0;
-            for (let user of ranklist) {
-              ++i;
-            %>
-                <tr>
-                    <td><b><%= i %></b></td>
-                    <td><%- syzoj.utils.renderUsername(user) %></td>
-                    <td style="font-content">
-                      <script id="user-infomation-script-<%= i %>" data-cfasync="false">
-                      (function () {
-                        var html = <%- serializejs(user.information) %>;
-                        var elem = document.createElement('div');
-                        elem.style = 'overflow: hidden; width: 100%; position: relative; ';
-                        elem.style.maxHeight = lineHeight + 'px';
-                        elem.innerHTML = html;
-                        var imgs = Array.prototype.slice.call(elem.getElementsByTagName('img'));
-                        for (var i in imgs) imgs[i].parentNode.removeChild(imgs[i]);
-                        var script = document.getElementById('user-infomation-script-<%= i %>');
-                        script.parentNode.replaceChild(elem, script);
-                      })();
-                      </script>
-                    </td>
-                </tr>
-             <%
-            } %>
-          </tbody>
-        </table>
-      </div>
     </div>
-    <div class="right floated five wide column">
-        <h4 class="ui top attached block header"><i class="ui quote left icon"></i>一言（ヒトコト）</h4>
-        <div class="ui bottom attached center aligned segment">
-          <div class="ui active centered inline loader" id="hitokoto-loader"></div>
-          <script>
-          $.get('https://v1.hitokoto.cn/?c=a', function (data) {
-            if (typeof data === 'string') data = JSON.parse(data);
-            $('#hitokoto-loader').removeClass('active');
-            $('#hitokoto-content').css('display', '').text(data.hitokoto);
-            if (data.from) {
-              $('#hitokoto-from').css('display', '').text('——' + data.from);
-            }
-          });
-          </script>
-          <div style="font-size: 1em; line-height: 1.5em; display: none; " id="hitokoto-content"></div>
-          <div style="text-align: right; margin-top: 15px; font-size: 0.9em; color: #666; display: none; " id="hitokoto-from"></div>
-        </div>
-      <h4 class="ui top attached block header"><i class="ui rss icon"></i>最近更新</h4>
-      <div class="ui bottom attached segment">
-	<table class="ui very basic center aligned table">
-          <thead>
-            <tr>
-              <th width="70%">题目</th>
-              <th width="30%">更新时间</th>
-            </tr>
-	  </thead>
-	  <tbody>
-	    <%
-	    for (let problem of problems) {
-	    %>
-	    <tr>
-	      <td><a href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %></a></td>
-	      <td><%= problem.time %></td>
-	    </tr>
-	    <% } %>
-	  </tbody>
-	</table>
-      </div>
-        <%
-        if (fortune) {
-            let color;
-            if (fortune.fortune.indexOf('吉') != -1) color = '#0ccf00';
-            else if (fortune.fortune.indexOf('凶') != -1) color = '#f25e65';
-            else color = '#444';
-        %>
-        <h4 class="ui top attached block header"><i class="ui magic icon"></i>今日运势</h4>
-        <div class="ui bottom attached segment">
-            <div style="height: 15px; "></div>
-            <div class="ui two column center aligned padded grid">
-                <div class="one column row">
-                    <div style="text-align: center; ">
-                        <div style="color: <%= color %>; font-size: 49px;"><%- (user.sex == -1 ? '♀ ' : '♂ ') + fortune.fortune + (user.sex == 1 ? ' <span style="transform: scaleX(-1); display: inline-block; ">♂</span>' : ' ♀') %></div>
-                    </div>
-                </div>
-                <div class="two column row">
-                    <div class="column">
-                        <div style="color: #0ccf00; ">
-                            <% if (fortune.good.length) { %>
-                            <strong>宜：</strong><%= fortune.good[0].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.good[0].detail %></span>
-                            <div style="margin-top: 10px; "></div>
-                            <strong>宜：</strong><%= fortune.good[1].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.good[1].detail %></span>
-                            <% } else { %>
-                            <strong>诸事不宜<br>
-                            </strong>
-                            <% } %>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <div style="color: #f25e65; ">
-                            <% if (fortune.bad.length) { %>
-                            <strong>忌：</strong><%= fortune.bad[0].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.bad[0].detail %></span>
-                            <div style="margin-top: 10px; "></div>
-                            <strong>忌：</strong><%= fortune.bad[1].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.bad[1].detail %></span>
-                            <% } else { %>
-                            <strong>万事皆宜<br>
-                            </strong>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <% } %>
+
+    <div class="five wide column">
       <h4 class="ui top attached block header"><i class="ui search icon"></i>搜索题目</h4>
       <div class="ui bottom attached segment">
         <form action="<%= syzoj.utils.makeUrl(['problems', 'search']) %>" method="get">
-          <div class="ui search" style="width: 100%; ">
-            <div class="ui left icon input" style="width: 100%; ">
-              <input class="prompt" style="width: 100%; " type="text" placeholder="ID / 题目名 …" name="keyword">
+          <div class="ui search" style="width: 100%;">
+            <div class="ui left icon input" style="width: 100%;">
+              <input class="prompt" style="width: 100%;" type="text" placeholder="ID / 题目名 …" name="keyword">
               <i class="search icon"></i>
             </div>
-            <div class="results" style="width: 100%; "></div>
+            <div class="results" style="width: 100%;"></div>
           </div>
         </form>
       </div>
-      <h4 class="ui top attached block header"><i class="ui calendar icon"></i>近期比赛</h4>
-      <div class="ui bottom attached <% if (!contests || !contests.length) { %>center aligned <% } %>segment">
-        <% if (!contests || !contests.length) { %>
-        还没有举行过任何比赛
-        <% } else { %>
-        <table class="ui very basic center aligned table">
-          <thead>
-            <tr>
-              <th>比赛名称</th>
-              <th>开始时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <%
-            for (let contest of contests) {
-              let now = syzoj.utils.getCurrentDate();
-              let tag = '';
-            %>
-            <tr>
-              <% if (now < contest.start_time) { %>
-                <% tag = '<span class="ui header"><div class="ui mini red label">未开始</div></span>' %>
-              <% } else if (now >= contest.start_time && now < contest.end_time) { %>
-                <% tag = '<span class="ui header"><div class="ui mini green label">进行中</div></span>' %>
-              <% } else { %>
-                <% tag = '<span class="ui header"><div class="ui mini grey label">已结束</div></span>' %>
-              <% } %>
-              <td><a href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><%= contest.title %> <%- tag %></a></td>
-              <td><%= syzoj.utils.formatDate(contest.start_time) %></td>
-            </tr>
-            <% } %>
-          </tbody>
-        </table>
-        <% } %>
-      </div>
+
       <% if (typeof links !== 'undefined' && links && links.length) { %>
-      <h4 class="ui top attached block header font-content"><i class="ui linkify icon"></i>友情链接</h4>
-      <div class="ui bottom attached segment">
-        <ul style="margin: 0; padding-left: 20px; ">
-          <% for (let link of links) { %>
-            <li><a href="<%= link.url %>"><%= link.title %></a></li>
-          <% } %>
-        </ul>
-      </div>
+        <h4 class="ui top attached block header font-content"><i class="ui linkify icon"></i>友情链接</h4>
+        <div class="ui bottom attached segment">
+          <ul style="margin: 0; padding-left: 20px;">
+            <% for (let link of links) { %>
+              <li><a href="<%= link.url %>"><%= link.title %></a></li>
+            <% } %>
+          </ul>
+        </div>
       <% } %>
     </div>
   </div>
+
 </div>
+
+<!-- ============ Banner 轮播 JS ============ -->
 <script>
+(function () {
+  'use strict';
+  var wrap = document.getElementById('ab-banner-wrap');
+  var emptyEl = document.getElementById('ab-banner-empty');
+  var dotsEl = document.getElementById('ab-banner-dots');
+  var prevBtn = document.getElementById('ab-banner-prev');
+  var nextBtn = document.getElementById('ab-banner-next');
+  if (!wrap) return;
+
+  var slides = [];
+  var current = 0;
+  var timer = null;
+
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function render(banners) {
+    if (!banners || banners.length === 0) {
+      emptyEl.style.display = 'flex';
+      emptyEl.textContent = '暂无 Banner';
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    banners.forEach(function (b, i) {
+      var slide = document.createElement(b.link_url ? 'a' : 'div');
+      slide.className = 'ab-banner-slide' + (i === 0 ? ' active' : '');
+      if (b.link_url) {
+        slide.href = b.link_url;
+        if (b.link_url.indexOf('http') === 0) slide.target = '_blank';
+      }
+      slide.innerHTML = '<img src="' + escapeAttr(b.image_path) + '" alt="' + escapeAttr(b.title || '') + '">';
+      wrap.insertBefore(slide, dotsEl);
+      slides.push(slide);
+
+      var dot = document.createElement('div');
+      dot.className = 'ab-banner-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', function () { goto(i); });
+      dotsEl.appendChild(dot);
+    });
+
+    if (banners.length <= 1) {
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    } else {
+      startAutoplay();
+    }
+  }
+
+  function goto(i) {
+    if (slides.length === 0) return;
+    current = (i + slides.length) % slides.length;
+    slides.forEach(function (s, idx) {
+      s.classList.toggle('active', idx === current);
+    });
+    var dots = dotsEl.querySelectorAll('.ab-banner-dot');
+    dots.forEach(function (d, idx) {
+      d.classList.toggle('active', idx === current);
+    });
+  }
+
+  function next() { goto(current + 1); }
+  function prev() { goto(current - 1); }
+
+  function startAutoplay() {
+    stopAutoplay();
+    timer = setInterval(next, 5000);
+  }
+  function stopAutoplay() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  prevBtn.addEventListener('click', function () { prev(); stopAutoplay(); startAutoplay(); });
+  nextBtn.addEventListener('click', function () { next(); stopAutoplay(); startAutoplay(); });
+  wrap.addEventListener('mouseenter', stopAutoplay);
+  wrap.addEventListener('mouseleave', startAutoplay);
+
+  $.getJSON('/api/active-banners', function (data) {
+    render((data && data.banners) || []);
+  }).fail(function () {
+    render([]);
+  });
+})();
+
+// 搜索框初始化(原有)
 $(function () {
   $('.ui.search').search({
     debug: true,
     saveRemoteData: false,
-    apiSettings: {
-      url: '/api/v2/search/problems/{query}',
-      cache: false
-    },
-    fields: {
-      title: 'name'
-    }
+    apiSettings: { url: '/api/v2/search/problems/{query}', cache: false },
+    fields: { title: 'name' }
   });
 });
 </script>
+
 <% include footer %>

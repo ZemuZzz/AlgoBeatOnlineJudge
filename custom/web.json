@@ -5,6 +5,14 @@
     {
       "title": "洛谷",
       "url": "https://www.luogu.com.cn"
+    },
+    {
+      "title": "Based 项目源码",
+      "url": "https://github.com/syzoj/syzoj"
+    },
+    {
+      "title": "当前仓库",
+      "url": "https://github.com/ZemuZzz/AlgoBeatOnlineJudge"
     }
   ],
   "default": {

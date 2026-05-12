@@ -1,0 +1,104 @@
+<% this.title = '首页 Banner 管理' %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 14px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>">后台管理</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">Banner 管理</div>
+  </div>
+
+  <h2><i class="image icon"></i>首页 Banner 管理</h2>
+  <p style="color: #666;">在此上传、管理首页轮播图。支持 JPG / PNG / WebP / GIF,最大 5MB。</p>
+
+  <!-- ============ 上传新 banner ============ -->
+  <div class="ui segment" style="background: #f9f9f9;">
+    <h4 style="margin-top: 0;"><i class="cloud upload icon"></i>上传新 Banner</h4>
+    <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['admin', 'banner', 'new']) %>" enctype="multipart/form-data">
+      <div class="two fields">
+        <div class="field">
+          <label>标题(纯标识,不显示在首页)</label>
+          <input type="text" name="title" placeholder="例如:春季促销" maxlength="100" required>
+        </div>
+        <div class="field">
+          <label>排序(数字越大越靠前,默认 0)</label>
+          <input type="number" name="sort_order" value="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>跳转链接(可选,留空则点击不跳转)</label>
+        <input type="text" name="link_url" placeholder="例如:/contest/5 或 https://...">
+      </div>
+      <div class="field">
+        <label>图片文件 *(必填)</label>
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required>
+      </div>
+      <button type="submit" class="ui primary button"><i class="upload icon"></i>上传</button>
+    </form>
+  </div>
+
+  <!-- ============ 已有 banner 列表 ============ -->
+  <h3 style="margin-top: 30px;">现有 Banner</h3>
+  <% if (!banners || banners.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="image outline icon"></i>暂无 Banner
+      </div>
+    </div>
+  <% } else { %>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th style="width: 200px;">预览</th>
+          <th>标题</th>
+          <th>跳转链接</th>
+          <th style="width: 80px;">排序</th>
+          <th style="width: 80px;">启用</th>
+          <th style="width: 160px;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let b of banners) { %>
+          <tr>
+            <td>
+              <img src="<%= b.image_path %>" alt="" style="max-width: 180px; max-height: 80px; border-radius: 4px;">
+            </td>
+            <td>
+              <form class="ui mini form" method="post" action="<%= syzoj.utils.makeUrl(['admin', 'banner', b.id, 'edit']) %>">
+                <div class="field" style="margin-bottom: 6px;">
+                  <input type="text" name="title" value="<%= b.title %>" maxlength="100">
+                </div>
+            </td>
+            <td>
+                <div class="field" style="margin-bottom: 6px;">
+                  <input type="text" name="link_url" value="<%= b.link_url || '' %>" placeholder="留空则不跳转">
+                </div>
+            </td>
+            <td>
+                <div class="field" style="margin-bottom: 6px;">
+                  <input type="number" name="sort_order" value="<%= b.sort_order %>">
+                </div>
+            </td>
+            <td>
+                <div class="ui toggle checkbox">
+                  <input type="checkbox" name="is_active" <% if (b.is_active) { %>checked<% } %>>
+                  <label></label>
+                </div>
+            </td>
+            <td>
+                <button type="submit" class="ui mini primary button"><i class="save icon"></i>保存</button>
+              </form>
+              <form method="post" action="<%= syzoj.utils.makeUrl(['admin', 'banner', b.id, 'delete']) %>"
+                    onsubmit="return confirm('确认删除此 Banner？图片文件也会一并删除。');"
+                    style="display: inline; margin-top: 4px;">
+                <button type="submit" class="ui mini red basic button"><i class="trash icon"></i>删除</button>
+              </form>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<% include footer %>

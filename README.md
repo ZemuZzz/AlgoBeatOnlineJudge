@@ -2,7 +2,7 @@
 
 基于 [SYZOJ](https://github.com/syzoj/syzoj) 二次开发的在线评测平台。在原版基础上新增了**用户名牌子系统**、**作弊者标签**、**工单系统**、**Hit 值评分系统**、**用户名颜色分档**、**邮箱验证**、**题解 / 评论 / 站内信 / 公告 / 个人剪贴板**等多项社区互动模块。
 
-> **当前版本**：v1.5.1 · 🐛 多项 bug 修复 · 🛡️ 作弊判定的完整后果 · 🔄 重新评测按钮
+> **当前版本**：v1.6.0 · 🔔 通知中心 · 🎨 左侧 Sidebar UI 重构 · 🖼️ 首页 Banner 轮播
 
 ## ✨ 主要特性
 
@@ -383,6 +383,7 @@ docker exec -it algobeat-mariadb-1 mariadb -u root syzoj
 
 完整版本说明详见 [Releases](https://github.com/ZemuZzz/AlgoBeatOnlineJudge/releases)。
 
+- **v1.6.0**：通知中心·在 header 加铃铛·题解审核·工单回复·工单状态变更触发通知·题解审核员显示·左侧 sidebar(洛谷风格) UI 重构·首页 banner 轮播系统(含 admin 后台)·首页重新设计
 - **v1.5.1**：单条提交操作完整化·重新评测按钮·作弊判定的完整后果（榜单清零+沉底·Hit 值剔除作弊比赛）·取消评测严格实现·全局 success.ejs 模板·多项小 bug 修复
 - **v1.5.0**:用户名牌子系统 + 作弊者标签 + 排行榜头像 · 修复 admin-cache 漏 super admin bug
 - **v1.4.0**:工单系统(6 大类 + 附件上传)+ 比赛删除 + 提交记录作弊/取消标记 + 关闭投稿确认框 bug 修复

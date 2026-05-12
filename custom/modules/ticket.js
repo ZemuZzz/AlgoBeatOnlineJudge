@@ -483,6 +483,21 @@ app.post('/ticket/:id/reply', async (req, res) => {
     }
     await ticket.save();
 
+    // [v1.6.0] 通知工单创建者(仅公开回复)
+    if (!isInternal && ticket.creator_id !== res.locals.user.id) {
+      try {
+        await syzoj.utils.createNotification({
+          recipientId: ticket.creator_id,
+          type: 'ticket_replied',
+          title: '您的工单《' + ticket.title + '》收到新回复',
+          content: res.locals.user.username + '：' + (content.length > 100 ? content.substring(0, 100) + '...' : content),
+          sourceUrl: syzoj.utils.makeUrl(['ticket', ticket.id]),
+          sourceId: ticket.id,
+          actorId: res.locals.user.id
+        });
+      } catch (e) { syzoj.log('[notification] ticket_replied failed: ' + e.message); }
+    }
+
     res.redirect(syzoj.utils.makeUrl(['ticket', ticket.id]));
   } catch (e) {
     syzoj.log(e);
@@ -526,6 +541,21 @@ app.post('/ticket/:id/status', async (req, res) => {
     sysReply.is_status_change = true;
     sysReply.created_at = now;
     await sysReply.save();
+
+    // [v1.6.0] 通知工单创建者
+    if (ticket.creator_id !== res.locals.user.id) {
+      try {
+        await syzoj.utils.createNotification({
+          recipientId: ticket.creator_id,
+          type: 'ticket_status_changed',
+          title: '您的工单《' + ticket.title + '》状态已变为：' + TICKET_STATUS[newStatus].label,
+          content: '操作员：' + res.locals.user.username,
+          sourceUrl: syzoj.utils.makeUrl(['ticket', ticket.id]),
+          sourceId: ticket.id,
+          actorId: res.locals.user.id
+        });
+      } catch (e) { syzoj.log('[notification] ticket_status_changed failed: ' + e.message); }
+    }
 
     res.redirect(syzoj.utils.makeUrl(['ticket', ticket.id]));
   } catch (e) {

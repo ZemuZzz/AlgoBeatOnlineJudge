@@ -34,6 +34,44 @@
                     <a><i class="check icon"></i>通过 <%= show_user.ac_problems.length %> 题</a>
                     <a style="float: right; "><i class="star icon"></i>积分 <%= show_user.rating %></a>
                 </div>
+                <% if (typeof followStats !== 'undefined' && followStats) { %>
+                <div class="extra content" style="display: flex; gap: 0; padding: 8px 0;">
+                  <a href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'following']) %>" style="flex: 1; text-align: center; color: inherit;">
+                    <b style="font-size: 1.05em;"><%= followStats.following %></b>
+                    <span style="color: #888; font-size: 0.9em; margin-left: 3px;">关注</span>
+                  </a>
+                  <span style="color: #ddd;">|</span>
+                  <a href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'followers']) %>" style="flex: 1; text-align: center; color: inherit;">
+                    <b style="font-size: 1.05em;"><%= followStats.followers %></b>
+                    <span style="color: #888; font-size: 0.9em; margin-left: 3px;">粉丝</span>
+                  </a>
+                </div>
+                <% } %>
+                <% if (res.locals.user && res.locals.user.id !== show_user.id) { %>
+                <div class="extra content" style="padding: 8px 12px;">
+                  <% if (typeof followRelation !== 'undefined' && followRelation && followRelation.mutual) { %>
+                    <form method="post" action="<%= syzoj.utils.makeUrl(['user', show_user.id, 'unfollow']) %>" style="margin: 0;"
+                          onsubmit="return confirm('确认取消关注？');">
+                      <button type="submit" class="ui small green basic fluid button">
+                        <i class="exchange icon"></i>互相关注
+                      </button>
+                    </form>
+                  <% } else if (typeof followRelation !== 'undefined' && followRelation && followRelation.iFollow) { %>
+                    <form method="post" action="<%= syzoj.utils.makeUrl(['user', show_user.id, 'unfollow']) %>" style="margin: 0;"
+                          onsubmit="return confirm('确认取消关注？');">
+                      <button type="submit" class="ui small basic fluid button">
+                        <i class="check icon"></i>已关注
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <form method="post" action="<%= syzoj.utils.makeUrl(['user', show_user.id, 'follow']) %>" style="margin: 0;">
+                      <button type="submit" class="ui small primary fluid button">
+                        <i class="plus icon"></i>关注
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+                <% } %>
             </div>
 
         </div>

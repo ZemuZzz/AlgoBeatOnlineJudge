@@ -477,6 +477,47 @@ app.post('/solution/:id/comment', async (req, res) => {
 
     await solution.resetCommentsNum();
 
+    // ============ 通知逻辑 ============
+    let viewerId = res.locals.user.id;
+    let notifiedIds = new Set();
+    notifiedIds.add(viewerId);
+
+    // 1. 通知题解作者
+    if (solution.user_id && !notifiedIds.has(solution.user_id)) {
+      try {
+        await syzoj.utils.createNotification({
+          recipientId: solution.user_id,
+          type: 'solution_comment',
+          title: res.locals.user.username + ' 评论了你的题解',
+          content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+          sourceUrl: syzoj.utils.makeUrl(['solution', solution.id]),
+          sourceId: solution.id,
+          actorId: viewerId
+        });
+        notifiedIds.add(solution.user_id);
+      } catch (e) { syzoj.log('[solution] notify author failed: ' + e.message); }
+    }
+
+    // 2. @ 提及通知
+    try {
+      if (syzoj.utils.parseMentions) {
+        let mentions = await syzoj.utils.parseMentions(content);
+        for (let m of mentions) {
+          if (notifiedIds.has(m.userId)) continue;
+          await syzoj.utils.createNotification({
+            recipientId: m.userId,
+            type: 'solution_comment_mention',
+            title: res.locals.user.username + ' 在题解评论里提到了你',
+            content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+            sourceUrl: syzoj.utils.makeUrl(['solution', solution.id]),
+            sourceId: solution.id,
+            actorId: viewerId
+          });
+          notifiedIds.add(m.userId);
+        }
+      }
+    } catch (e) { syzoj.log('[solution] @ mention notify failed: ' + e.message); }
+
     res.redirect(syzoj.utils.makeUrl(['solution', id]));
   } catch (e) {
     syzoj.log(e);

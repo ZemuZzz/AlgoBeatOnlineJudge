@@ -1,0 +1,67 @@
+<% this.title = (listType === 'following' ? '关注列表' : '粉丝列表') + ' - ' + show_user.username %>
+<% include header %>
+
+<div class="padding">
+  <div class="ui breadcrumb" style="margin-bottom: 14px;">
+    <a class="section" href="<%= syzoj.utils.makeUrl(['user', show_user.id]) %>">
+      <%- syzoj.utils.renderUsername(show_user) %>
+    </a>
+    <i class="right angle icon divider"></i>
+    <div class="active section"><%= listType === 'following' ? '关注列表' : '粉丝列表' %></div>
+  </div>
+
+  <h2>
+    <i class="<%= listType === 'following' ? 'user plus' : 'users' %> icon"></i>
+    <%= listType === 'following' ? show_user.username + ' 关注的人' : show_user.username + ' 的粉丝' %>
+    <span class="ui label" style="vertical-align: middle;"><%= total %></span>
+  </h2>
+
+  <div class="ui secondary pointing menu" style="margin-bottom: 20px;">
+    <a class="<%= listType === 'following' ? 'active item' : 'item' %>" href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'following']) %>">
+      关注
+    </a>
+    <a class="<%= listType === 'followers' ? 'active item' : 'item' %>" href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'followers']) %>">
+      粉丝
+    </a>
+  </div>
+
+  <% if (users.length === 0) { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="user outline icon"></i>
+        <% if (listType === 'following') { %>
+          ta 还没有关注任何人
+        <% } else { %>
+          ta 还没有粉丝
+        <% } %>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="ui divided items">
+      <% for (let u of users) { %>
+        <div class="item" style="padding: 14px; border-radius: 6px;">
+          <a class="ui avatar image" href="<%= syzoj.utils.makeUrl(['user', u.id]) %>" style="width: 48px; height: 48px;">
+            <img src="<%= syzoj.utils.gravatar(u.email, 48) %>" style="border-radius: 50%;">
+          </a>
+          <div class="content" style="margin-left: 14px; flex: 1;">
+            <a class="header" href="<%= syzoj.utils.makeUrl(['user', u.id]) %>" style="font-size: 1.1em;">
+              <%- syzoj.utils.renderUsername(u) %>
+            </a>
+            <div class="description" style="color: #888; font-size: 0.85em; margin-top: 4px;">
+              <% if (u.information) { %>
+                <%- u.information.substring(0, 100).replace(/[<>]/g, '') %>
+                <% if (u.information.length > 100) { %>...<% } %>
+              <% } %>
+            </div>
+            <div class="meta" style="color: #aaa; font-size: 0.8em; margin-top: 4px;">
+              <%= listType === 'following' ? '关注于' : '关注我于' %> <%= syzoj.utils.formatDate(u.followedAt) %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <% include page %>
+  <% } %>
+</div>
+
+<% include footer %>

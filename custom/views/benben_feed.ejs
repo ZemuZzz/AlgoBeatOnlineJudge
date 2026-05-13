@@ -1,0 +1,309 @@
+<!-- 这是首页/profile 用的犇犇 widget,提供发布表单 + tab + AJAX 信息流 -->
+<style>
+.benben-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 14px;
+}
+.benben-tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-weight: 500;
+  transition: all .15s;
+}
+.benben-tab:hover { color: #2185d0; }
+.benben-tab.active {
+  color: #2185d0;
+  border-bottom-color: #2185d0;
+}
+.benben-compose {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.benben-compose textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.95em;
+  box-sizing: border-box;
+}
+.benben-compose-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.benben-image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.benben-image-preview img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+.benben-char-count {
+  color: #999;
+  font-size: 0.85em;
+}
+.benben-char-count.over { color: #d33; }
+.benben-item {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 0;
+  display: flex;
+  gap: 12px;
+}
+.benben-item:last-child { border-bottom: none; }
+.benben-item-avatar img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.benben-item-body { flex: 1; min-width: 0; }
+.benben-item-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92em;
+}
+.benben-item-username { font-weight: 600; color: #333; }
+.benben-item-time { color: #999; font-size: 0.85em; }
+.benben-item-content {
+  margin-top: 4px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.benben-item-images {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+}
+.benben-item-images.grid-1 { grid-template-columns: 1fr; max-width: 240px; }
+.benben-item-images.grid-2,
+.benben-item-images.grid-4 { grid-template-columns: repeat(2, 1fr); max-width: 320px; }
+.benben-item-images.grid-3,
+.benben-item-images.grid-6,
+.benben-item-images.grid-9 { grid-template-columns: repeat(3, 1fr); max-width: 320px; }
+.benben-item-images.grid-5,
+.benben-item-images.grid-7,
+.benben-item-images.grid-8 { grid-template-columns: repeat(3, 1fr); max-width: 320px; }
+.benben-item-images img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.benben-item-images img:hover { transform: scale(1.03); }
+.benben-item-meta {
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+  color: #888;
+  font-size: 0.85em;
+}
+.benben-item-meta a { color: #888; }
+.benben-item-meta a:hover { color: #2185d0; }
+.benben-mention { color: #2185d0; }
+.benben-feed-loading { text-align: center; padding: 20px; color: #999; }
+.benben-feed-empty { text-align: center; padding: 30px; color: #999; }
+</style>
+
+<div class="benben-widget" id="benben-widget-root">
+  <% if (res.locals.user) { %>
+    <!-- 发布表单 -->
+    <form method="post" action="<%= syzoj.utils.makeUrl(['benben', 'new']) %>"
+          enctype="multipart/form-data"
+          class="benben-compose" id="benben-compose-form">
+      <input type="hidden" name="return_url" value="<%= req.originalUrl %>">
+      <textarea name="content" rows="3" maxlength="500"
+                placeholder="发个犇犇吧 (Ctrl+Enter 发送, 支持 @username 提及)"
+                id="benben-textarea"></textarea>
+      <div class="benben-image-preview" id="benben-image-preview"></div>
+      <div class="benben-compose-footer">
+        <label class="ui small basic button" style="margin: 0;">
+          <i class="image icon"></i>添加图片
+          <input type="file" name="images" multiple accept="image/jpeg,image/png,image/webp,image/gif"
+                 id="benben-image-input" style="display: none;">
+        </label>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="benben-char-count" id="benben-char-count">0 / 500</span>
+          <button type="submit" class="ui primary small button">
+            <i class="paper plane icon"></i>发送
+          </button>
+        </div>
+      </div>
+    </form>
+  <% } else { %>
+    <div style="text-align: center; padding: 14px; color: #999; background: #f9f9f9; border-radius: 4px; margin-bottom: 14px;">
+      <a href="/login">登录</a> 后即可发布犇犇
+    </div>
+  <% } %>
+
+  <!-- Tabs -->
+  <% if (res.locals.user) { %>
+    <div class="benben-tabs">
+      <div class="benben-tab active" data-tab="following">我关注的</div>
+      <div class="benben-tab" data-tab="mine">我发布的</div>
+      <% if (res.locals.user.is_admin || (res.locals.user.privileges && res.locals.user.privileges.includes('manage_user'))) { %>
+        <div class="benben-tab" data-tab="all">全部 (管理)</div>
+      <% } %>
+    </div>
+  <% } %>
+
+  <!-- Feed -->
+  <div id="benben-feed-container">
+    <div class="benben-feed-loading">
+      <% if (res.locals.user) { %>
+        <i class="spinner loading icon"></i>加载中...
+      <% } else { %>
+        登录后即可查看你关注的人发布的犇犇
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var currentTab = 'following';
+  var feedContainer = document.getElementById('benben-feed-container');
+  var tabs = document.querySelectorAll('.benben-tab');
+  var loggedIn = <%- res.locals.user ? 'true' : 'false' %>;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  function renderPost(p) {
+    var imagesHtml = '';
+    if (p.images && p.images.length > 0) {
+      var gridClass = 'grid-' + p.images.length;
+      imagesHtml = '<div class="benben-item-images ' + gridClass + '">';
+      p.images.forEach(function (img) {
+        imagesHtml += '<a href="' + escapeAttr(img.url) + '" target="_blank"><img src="' + escapeAttr(img.url) + '" alt=""></a>';
+      });
+      imagesHtml += '</div>';
+    }
+    var avatarUrl = p.user ? p.user.avatar : '';
+    // 直接用后端生成的 usernameHtml(含颜色 + 牌子 tag),不本地选转义
+    var userBlock = p.user ?
+      ('<a href="/user/' + p.user.id + '" style="text-decoration: none;">' + p.user.usernameHtml + '</a>') :
+      '<span style="color:#999">(已删除)</span>';
+
+    var html = '<div class="benben-item">' +
+      '<div class="benben-item-avatar">' +
+      (p.user ? '<a href="/user/' + p.user.id + '"><img src="' + escapeAttr(avatarUrl) + '"></a>' : '<img src="">') +
+      '</div>' +
+      '<div class="benben-item-body">' +
+      '  <div class="benben-item-head">' +
+      '    <span class="benben-item-username">' + userBlock + '</span>' +
+      '    <span class="benben-item-time">' + escapeHtml(p.createdAtStr) + '</span>' +
+      '  </div>' +
+      '  <div class="benben-item-content">' + p.contentRendered + '</div>' +
+      imagesHtml +
+      '  <div class="benben-item-meta">' +
+      '    <a href="/benben/' + p.id + '"><i class="comment outline icon"></i>' + (p.replyCount || 0) + ' 回复</a>' +
+      '  </div>' +
+      '</div>' +
+      '</div>';
+    return html;
+  }
+
+  function loadFeed() {
+    feedContainer.innerHTML = '<div class="benben-feed-loading"><i class="spinner loading icon"></i>加载中...</div>';
+    $.getJSON('/api/benben/feed?tab=' + currentTab, function (data) {
+      if (!data || !data.posts || data.posts.length === 0) {
+        feedContainer.innerHTML = '<div class="benben-feed-empty">' +
+          (currentTab === 'following' ? '关注的人还没发犇犇,去关注一些用户吧' :
+           currentTab === 'mine' ? '你还没发过犇犇' : '暂无犇犇') +
+          '</div>';
+        return;
+      }
+      var html = '';
+      data.posts.forEach(function (p) { html += renderPost(p); });
+      feedContainer.innerHTML = html;
+    }).fail(function () {
+      feedContainer.innerHTML = '<div class="benben-feed-empty">加载失败</div>';
+    });
+  }
+
+  // 切换 tab
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      currentTab = t.dataset.tab;
+      loadFeed();
+    });
+  });
+
+  // 字数计数
+  var textarea = document.getElementById('benben-textarea');
+  var charCount = document.getElementById('benben-char-count');
+  if (textarea) {
+    textarea.addEventListener('input', function () {
+      var len = textarea.value.length;
+      charCount.textContent = len + ' / 500';
+      charCount.classList.toggle('over', len > 500);
+    });
+    // Ctrl+Enter 提交
+    textarea.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('benben-compose-form').submit();
+      }
+    });
+  }
+
+  // 图片预览
+  var fileInput = document.getElementById('benben-image-input');
+  var preview = document.getElementById('benben-image-preview');
+  if (fileInput) {
+    fileInput.addEventListener('change', function () {
+      preview.innerHTML = '';
+      var files = Array.from(fileInput.files).slice(0, 9);
+      if (files.length > 9) alert('最多 9 张图片');
+      files.forEach(function (f) {
+        if (f.size > 5 * 1024 * 1024) {
+          alert(f.name + ' 超过 5MB,将被忽略');
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var img = document.createElement('img');
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(f);
+      });
+    });
+  }
+
+  // 初始加载
+  if (loggedIn) loadFeed();
+})();
+</script>

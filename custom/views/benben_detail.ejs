@@ -1,0 +1,119 @@
+<% this.title = '犇犇 #' + post.id %>
+<% include header %>
+
+<div class="padding" style="max-width: 800px; margin: 0 auto;">
+  <div class="ui breadcrumb" style="margin-bottom: 14px;">
+    <a class="section" href="/">首页</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">犇犇 #<%= post.id %></div>
+  </div>
+
+  <!-- 原犇犇 -->
+  <div class="ui segment benben-card" style="margin-bottom: 14px;">
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <a href="<%= syzoj.utils.makeUrl(['user', post.user.id]) %>" style="flex-shrink: 0;">
+        <img src="<%= syzoj.utils.gravatar(post.user.email, 48) %>" style="width: 48px; height: 48px; border-radius: 50%;">
+      </a>
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <a href="<%= syzoj.utils.makeUrl(['user', post.user.id]) %>" style="font-weight: 600; font-size: 1.05em;">
+            <%- syzoj.utils.renderUsername(post.user) %>
+          </a>
+          <span style="color: #999; font-size: 0.85em;"><%= syzoj.utils.formatDate(post.created_at) %></span>
+        </div>
+        <div style="margin-top: 6px; line-height: 1.6; word-break: break-word;">
+          <%- post.contentRendered %>
+        </div>
+
+        <% if (post.images && post.images.length > 0) { %>
+          <div class="benben-images" style="margin-top: 10px; display: grid; grid-template-columns: repeat(<%= Math.min(post.images.length, 3) %>, 1fr); gap: 6px;">
+            <% for (let img of post.images) { %>
+              <a href="<%= img.url %>" target="_blank" style="display: block;">
+                <img src="<%= img.url %>" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px; cursor: pointer;">
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+
+        <% if (canDelete) { %>
+          <div style="margin-top: 10px;">
+            <form method="post" action="<%= syzoj.utils.makeUrl(['benben', post.id, 'delete']) %>"
+                  style="display: inline; margin: 0;"
+                  onsubmit="return confirm('确认删除此犇犇？');">
+              <input type="hidden" name="return_url" value="/">
+              <button type="submit" class="ui mini red basic button">
+                <i class="trash icon"></i>删除
+              </button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 回复列表 -->
+  <h4 class="ui top attached block header">
+    <i class="comments icon"></i>
+    回复 (<%= post.replies.length %>)
+  </h4>
+  <div class="ui bottom attached segment">
+    <% if (post.replies.length === 0) { %>
+      <div style="text-align: center; color: #999; padding: 20px;">还没有回复,来抢沙发吧!</div>
+    <% } else { %>
+      <% for (let reply of post.replies) { %>
+        <div class="benben-reply" style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px;">
+          <a href="<%= syzoj.utils.makeUrl(['user', reply.user.id]) %>" style="flex-shrink: 0;">
+            <img src="<%= syzoj.utils.gravatar(reply.user.email, 32) %>" style="width: 32px; height: 32px; border-radius: 50%;">
+          </a>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <a href="<%= syzoj.utils.makeUrl(['user', reply.user.id]) %>" style="font-weight: 600;">
+                <%- syzoj.utils.renderUsername(reply.user) %>
+              </a>
+              <span style="color: #999; font-size: 0.8em;"><%= syzoj.utils.formatDate(reply.created_at) %></span>
+            </div>
+            <div style="margin-top: 4px; line-height: 1.5; word-break: break-word; font-size: 0.95em;">
+              <%- reply.contentRendered %>
+            </div>
+            <% if (res.locals.user && (res.locals.user.id === reply.user_id || res.locals.user.is_admin || (res.locals.user.privileges && res.locals.user.privileges.includes('manage_user')))) { %>
+              <form method="post" action="<%= syzoj.utils.makeUrl(['benben', reply.id, 'delete']) %>"
+                    style="display: inline; margin-top: 4px;"
+                    onsubmit="return confirm('确认删除此回复？');">
+                <input type="hidden" name="return_url" value="<%= syzoj.utils.makeUrl(['benben', post.id]) %>">
+                <button type="submit" class="ui mini red basic compact button" style="margin-top: 4px;">
+                  <i class="trash icon"></i>删除
+                </button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    <% } %>
+
+    <!-- 回复表单 -->
+    <% if (res.locals.user) { %>
+      <form method="post" action="<%= syzoj.utils.makeUrl(['benben', 'new']) %>" class="ui form" style="margin-top: 18px;">
+        <input type="hidden" name="reply_to" value="<%= post.id %>">
+        <input type="hidden" name="return_url" value="<%= syzoj.utils.makeUrl(['benben', post.id]) %>">
+        <div class="field">
+          <textarea name="content" rows="3" maxlength="500" placeholder="写下你的回复,支持 @username 提及" required></textarea>
+        </div>
+        <button type="submit" class="ui primary button">
+          <i class="reply icon"></i>回复
+        </button>
+      </form>
+    <% } else { %>
+      <div style="margin-top: 12px; text-align: center; color: #999;">
+        <a href="/login">登录</a> 后参与回复
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.benben-mention { color: #2185d0; }
+.benben-card .benben-images img { transition: transform .15s; }
+.benben-card .benben-images img:hover { transform: scale(1.03); }
+</style>
+
+<% include footer %>

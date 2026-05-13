@@ -49,6 +49,19 @@ services:
       - ./custom/models-built/homepage-banner.js:/app/models-built/homepage-banner.js:ro
       - ./custom/models/homepage-banner.ts:/app/models/homepage-banner.ts:ro
       - ./custom/uploads/banner:/app/static/self/banner
+      - ./custom/models-built/user-follow.js:/app/models-built/user-follow.js:ro
+      - ./custom/models/user-follow.ts:/app/models/user-follow.ts:ro
+      - ./custom/modules/user_follow.js:/app/modules/user_follow.js:ro
+      - ./custom/modules/benben.js:/app/modules/benben.js:ro
+      - ./custom/views/benben_detail.ejs:/app/views/benben_detail.ejs:ro
+      - ./custom/views/benben_feed.ejs:/app/views/benben_feed.ejs:ro
+      - ./custom/modules/_user_follow_loader.js:/app/modules/_user_follow_loader.js:ro
+      - ./custom/views/user_following.ejs:/app/views/user_following.ejs:ro
+      - ./custom/models-built/benben-post.js:/app/models-built/benben-post.js:ro
+      - ./custom/models-built/benben-image.js:/app/models-built/benben-image.js:ro
+      - ./custom/models/benben-post.ts:/app/models/benben-post.ts:ro
+      - ./custom/models/benben-image.ts:/app/models/benben-image.ts:ro
+      - ./custom/uploads/benben:/app/static/self/benben
       - ./custom/views/notifications.ejs:/app/views/notifications.ejs:ro
       - ./custom/views/admin_banners.ejs:/app/views/admin_banners.ejs:ro
       - ./custom/modules/announcement.js:/app/modules/announcement.js:ro

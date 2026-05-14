@@ -133,7 +133,7 @@
           class="benben-compose" id="benben-compose-form">
       <input type="hidden" name="return_url" value="<%= req.originalUrl %>">
       <textarea name="content" rows="3" maxlength="500"
-                placeholder="发个犇犇吧 (Ctrl+Enter 发送, 支持 @username 提及)"
+                placeholder="发个犇犇吧（Ctrl+Enter 发送，支持 @username 提及某用户）"
                 id="benben-textarea"></textarea>
       <div class="benben-image-preview" id="benben-image-preview"></div>
       <div class="benben-compose-footer">
@@ -162,7 +162,7 @@
       <div class="benben-tab active" data-tab="following">我关注的</div>
       <div class="benben-tab" data-tab="mine">我发布的</div>
       <% if (res.locals.user.is_admin || (res.locals.user.privileges && res.locals.user.privileges.includes('manage_user'))) { %>
-        <div class="benben-tab" data-tab="all">全部 (管理)</div>
+        <div class="benben-tab" data-tab="all">全部（管理查看）</div>
       <% } %>
     </div>
   <% } %>
@@ -238,7 +238,7 @@
     $.getJSON('/api/benben/feed?tab=' + currentTab, function (data) {
       if (!data || !data.posts || data.posts.length === 0) {
         feedContainer.innerHTML = '<div class="benben-feed-empty">' +
-          (currentTab === 'following' ? '关注的人还没发犇犇,去关注一些用户吧' :
+          (currentTab === 'following' ? '关注的人还没发犇犇，可以等等或去关注一些用户吧！' :
            currentTab === 'mine' ? '你还没发过犇犇' : '暂无犇犇') +
           '</div>';
         return;
@@ -289,7 +289,7 @@
       if (files.length > 9) alert('最多 9 张图片');
       files.forEach(function (f) {
         if (f.size > 5 * 1024 * 1024) {
-          alert(f.name + ' 超过 5MB,将被忽略');
+          alert(f.name + ' 超过 5MB，将被忽略');
           return;
         }
         var reader = new FileReader();

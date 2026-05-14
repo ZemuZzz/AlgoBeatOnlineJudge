@@ -166,6 +166,7 @@
               <% if (user.is_admin) { %>
                 <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'announcements']) %>"><i class="bullhorn icon"></i>公告管理</a>
                 <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'user-tags']) %>"><i class="id badge icon"></i>牌子管理</a>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'banners']) %>"><i class="audio description icon"></i>轮播管理</a>
               <% } %>
               <div class="ui divider"></div>
               <a class="item" href-post="<%= syzoj.utils.makeUrl(['logout'], { url: req.originalUrl }) %>"><i class="power icon"></i>注销</a>

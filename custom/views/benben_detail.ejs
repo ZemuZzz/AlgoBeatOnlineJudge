@@ -58,7 +58,7 @@
   </h4>
   <div class="ui bottom attached segment">
     <% if (post.replies.length === 0) { %>
-      <div style="text-align: center; color: #999; padding: 20px;">还没有回复,来抢沙发吧!</div>
+      <div style="text-align: center; color: #999; padding: 20px;">还没有回复，来抢沙发吧！</div>
     <% } else { %>
       <% for (let reply of post.replies) { %>
         <div class="benben-reply" style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px;">
@@ -96,7 +96,7 @@
         <input type="hidden" name="reply_to" value="<%= post.id %>">
         <input type="hidden" name="return_url" value="<%= syzoj.utils.makeUrl(['benben', post.id]) %>">
         <div class="field">
-          <textarea name="content" rows="3" maxlength="500" placeholder="写下你的回复,支持 @username 提及" required></textarea>
+          <textarea name="content" rows="3" maxlength="500" placeholder="写下你的回复，支持 @username 提及某用户" required></textarea>
         </div>
         <button type="submit" class="ui primary button">
           <i class="reply icon"></i>回复

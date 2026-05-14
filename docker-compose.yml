@@ -49,6 +49,7 @@ services:
       - ./custom/models-built/homepage-banner.js:/app/models-built/homepage-banner.js:ro
       - ./custom/models/homepage-banner.ts:/app/models/homepage-banner.ts:ro
       - ./custom/uploads/banner:/app/static/self/banner
+      - ./custom/static-libs:/app/static/self/lib
       - ./custom/models-built/user-follow.js:/app/models-built/user-follow.js:ro
       - ./custom/models/user-follow.ts:/app/models/user-follow.ts:ro
       - ./custom/modules/user_follow.js:/app/modules/user_follow.js:ro

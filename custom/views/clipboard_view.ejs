@@ -1,6 +1,53 @@
 <% this.title = item.title || '剪贴板' %>
 <% include header %>
 
+<!-- markdown-it + highlight.js + KaTeX (本地化) -->
+<link rel="stylesheet" href="/self/lib/highlight-atom-one-light.min.css">
+<link rel="stylesheet" href="/self/lib/katex.min.css">
+<script src="/self/lib/markdown-it.min.js"></script>
+<script src="/self/lib/highlight.min.js"></script>
+<script src="/self/lib/katex.min.js"></script>
+<script src="/self/lib/katex-auto-render.min.js"></script>
+<style>
+.clipboard-rendered pre {
+  background: #f6f8fa;
+  border-radius: 4px;
+  padding: 10px;
+  overflow-x: auto;
+}
+.clipboard-rendered code:not(pre code) {
+  background: #f6f8fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.92em;
+}
+.clipboard-rendered h1,
+.clipboard-rendered h2,
+.clipboard-rendered h3 {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+  margin-top: 16px;
+}
+.clipboard-rendered blockquote {
+  border-left: 3px solid #ddd;
+  padding: 4px 12px;
+  color: #666;
+  margin: 8px 0;
+}
+.clipboard-rendered table {
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+.clipboard-rendered table th,
+.clipboard-rendered table td {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+}
+.clipboard-raw-source {
+  display: none;
+}
+</style>
+
 <div class="padding">
   <div class="ui breadcrumb" style="margin-bottom: 15px;">
     <% if (typeof viaShareLink !== 'undefined' && viaShareLink) { %>
@@ -44,7 +91,8 @@
 
     <div class="ui divider"></div>
 
-    <div class="article-content"><%- item.contentRendered %></div>
+    <div class="article-content clipboard-rendered" id="clipboard-rendered-content"></div>
+    <textarea class="clipboard-raw-source" id="clipboard-raw-source"><%= item.content || '' %></textarea>
   </div>
 
   <% if (isOwn) { %>
@@ -98,5 +146,45 @@
     </div>
   <% } %>
 </div>
+
+<script>
+$(function () {
+  var md = window.markdownit({
+    html: false,
+    breaks: true,
+    linkify: true,
+    typographer: false,
+    highlight: function (code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return '<pre><code class="hljs language-' + lang + '">' +
+                 hljs.highlight(code, { language: lang, ignoreIllegals: true }).value +
+                 '</code></pre>';
+        } catch (e) {}
+      }
+      return '<pre><code class="hljs">' + md.utils.escapeHtml(code) + '</code></pre>';
+    }
+  });
+
+  var rawText = $('#clipboard-raw-source').val() || '';
+  var $out = $('#clipboard-rendered-content');
+  try {
+    $out.html(md.render(rawText));
+    if (window.renderMathInElement) {
+      window.renderMathInElement($out[0], {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true }
+        ],
+        throwOnError: false
+      });
+    }
+  } catch (e) {
+    $out.html('<div style="color:#d33">渲染出错: ' + e.message + '</div>');
+  }
+});
+</script>
 
 <% include footer %>

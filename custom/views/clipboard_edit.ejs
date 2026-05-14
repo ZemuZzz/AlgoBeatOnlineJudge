@@ -11,6 +11,97 @@ function expiresToDays(ts) {
 }
 %>
 
+<!-- markdown-it + highlight.js + KaTeX (BootCDN 国内备案) -->
+<link rel="stylesheet" href="/self/lib/highlight-atom-one-light.min.css">
+<link rel="stylesheet" href="/self/lib/katex.min.css">
+<script src="/self/lib/markdown-it.min.js"></script>
+<script src="/self/lib/highlight.min.js"></script>
+<script src="/self/lib/katex.min.js"></script>
+<script src="/self/lib/katex-auto-render.min.js"></script>
+
+<style>
+.clipboard-edit-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  height: 540px;
+}
+.clipboard-edit-pane {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+.clipboard-edit-pane-head {
+  background: #f5f5f5;
+  padding: 6px 12px;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.88em;
+  color: #555;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.clipboard-edit-pane textarea {
+  flex: 1;
+  border: none !important;
+  outline: none;
+  padding: 12px !important;
+  font-family: 'Fira Mono', Consolas, Monaco, monospace !important;
+  font-size: 13px !important;
+  resize: none !important;
+  line-height: 1.55;
+  width: 100% !important;
+  background: #fafafa;
+}
+.clipboard-edit-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: #fff;
+  font-size: 14px;
+}
+.clipboard-edit-preview pre {
+  background: #f6f8fa;
+  border-radius: 4px;
+  padding: 10px;
+  overflow-x: auto;
+}
+.clipboard-edit-preview code:not(pre code) {
+  background: #f6f8fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.92em;
+}
+.clipboard-edit-preview h1,
+.clipboard-edit-preview h2,
+.clipboard-edit-preview h3 {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+  margin-top: 16px;
+}
+.clipboard-edit-preview blockquote {
+  border-left: 3px solid #ddd;
+  padding: 4px 12px;
+  color: #666;
+  margin: 8px 0;
+}
+.clipboard-edit-preview table {
+  border-collapse: collapse;
+}
+.clipboard-edit-preview table th,
+.clipboard-edit-preview table td {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+}
+.clipboard-edit-stats {
+  font-size: 0.85em;
+  color: #888;
+}
+</style>
+
 <div class="padding">
   <div class="ui breadcrumb" style="margin-bottom: 15px;">
     <a class="section" href="<%= syzoj.utils.makeUrl(['clipboard']) %>"><i class="clipboard outline icon"></i>我的剪贴板</a>
@@ -23,7 +114,7 @@ function expiresToDays(ts) {
   <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['clipboard', item.id, 'edit']) %>">
     <div class="field">
       <label>标题</label>
-      <input type="text" name="title" maxlength="120" value="<%= item.title || '' %>" placeholder="例如：常用模板代码" required>
+      <input type="text" name="title" maxlength="120" value="<%= item.title || '' %>" placeholder="例如:常用模板代码" required>
     </div>
 
     <div class="field">
@@ -31,30 +122,52 @@ function expiresToDays(ts) {
       <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 6px;">
         <div class="ui radio checkbox">
           <input type="radio" name="visibility" value="private" <% if (item.visibility !== 'public' && item.visibility !== 'link') { %>checked<% } %>>
-          <label><i class="lock icon"></i>私有（仅自己可见）</label>
+          <label><i class="lock icon"></i>私有(仅自己可见)</label>
         </div>
         <div class="ui radio checkbox">
           <input type="radio" name="visibility" value="public" <% if (item.visibility === 'public') { %>checked<% } %>>
-          <label><i class="globe icon"></i>公开（出现在我的公开剪贴板列表）</label>
+          <label><i class="globe icon"></i>公开(出现在我的公开剪贴板列表)</label>
         </div>
         <div class="ui radio checkbox">
           <input type="radio" name="visibility" value="link" <% if (item.visibility === 'link') { %>checked<% } %> id="vis-link">
-          <label><i class="linkify icon"></i>分享链接（凭链接访问）</label>
+          <label><i class="linkify icon"></i>分享链接(凭链接访问)</label>
         </div>
       </div>
     </div>
 
     <div class="field" id="link-options" style="display: <%= item.visibility === 'link' ? 'block' : 'none' %>; padding-left: 20px; border-left: 3px solid #2185d0;">
-      <label>分享链接有效期（天）</label>
+      <label>分享链接有效期(天)</label>
       <input type="number" name="share_days" min="0" max="365" value="<%= expiresToDays(item.share_expires) %>" style="max-width: 150px;">
       <div style="color: #888; font-size: 0.85em; margin-top: 4px;">
-        填 <code>0</code> 表示永不过期；最长 365 天。保存后会生成一个分享链接。
+        填 <code>0</code> 表示永不过期;最长 365 天。保存后会生成一个分享链接。
       </div>
     </div>
 
     <div class="field">
-      <label>内容（支持 Markdown，单条最大 100 KB）</label>
-      <textarea name="content" rows="20" placeholder="支持 Markdown 语法..."><%= item.content || '' %></textarea>
+      <label>内容(左侧 Markdown 编辑,右侧实时预览;支持代码高亮与 $\KaTeX$ 数学公式;单条最大 100 KB)</label>
+      <div class="clipboard-edit-split">
+        <div class="clipboard-edit-pane">
+          <div class="clipboard-edit-pane-head">
+            <span><i class="edit icon"></i>编辑</span>
+            <span class="clipboard-edit-stats" id="stat-edit">0 字 · 0 行</span>
+          </div>
+          <textarea name="content" id="clipboard-edit-content" placeholder="支持 Markdown,例如:
+# 标题
+
+```cpp
+int main() { return 0; }
+```
+
+数学公式: $E = mc^2$"><%= item.content || '' %></textarea>
+        </div>
+        <div class="clipboard-edit-pane">
+          <div class="clipboard-edit-pane-head">
+            <span><i class="eye icon"></i>预览</span>
+            <span class="clipboard-edit-stats">实时</span>
+          </div>
+          <div class="clipboard-edit-preview markdown-body" id="clipboard-edit-preview"></div>
+        </div>
+      </div>
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
@@ -68,14 +181,80 @@ function expiresToDays(ts) {
 
 <script>
 $(function () {
-  function refresh() {
+  // ---- 可见性 radio 切换 ----
+  function refreshVisibility() {
     var v = $('input[name="visibility"]:checked').val();
     if (v === 'link') $('#link-options').show();
     else $('#link-options').hide();
   }
   $('.ui.radio.checkbox').checkbox();
-  $('input[name="visibility"]').change(refresh);
-  refresh();
+  $('input[name="visibility"]').change(refreshVisibility);
+  refreshVisibility();
+
+  // ---- Markdown 实时预览 ----
+  var md = window.markdownit({
+    html: false,
+    breaks: true,
+    linkify: true,
+    typographer: false,
+    highlight: function (code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return '<pre><code class="hljs language-' + lang + '">' +
+                 hljs.highlight(code, { language: lang, ignoreIllegals: true }).value +
+                 '</code></pre>';
+        } catch (e) {}
+      }
+      return '<pre><code class="hljs">' + md.utils.escapeHtml(code) + '</code></pre>';
+    }
+  });
+
+  var $textarea = $('#clipboard-edit-content');
+  var $preview = $('#clipboard-edit-preview');
+  var $stat = $('#stat-edit');
+
+  function render() {
+    var text = $textarea.val();
+    try {
+      $preview.html(md.render(text));
+      // KaTeX auto-render 扫描 $...$ 和 $$...$$
+      if (window.renderMathInElement) {
+        window.renderMathInElement($preview[0], {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false
+        });
+      }
+    } catch (e) {
+      $preview.html('<div style="color:#d33">渲染出错: ' + e.message + '</div>');
+    }
+    var lines = text.split('\n').length;
+    var chars = text.length;
+    $stat.text(chars + ' 字 · ' + lines + ' 行');
+  }
+
+  // 滚动同步
+  function syncScroll() {
+    var ta = $textarea[0];
+    var pv = $preview[0];
+    var ratio = ta.scrollTop / (ta.scrollHeight - ta.clientHeight || 1);
+    pv.scrollTop = ratio * (pv.scrollHeight - pv.clientHeight);
+  }
+
+  // 节流渲染
+  var renderTimer = null;
+  $textarea.on('input', function () {
+    if (renderTimer) clearTimeout(renderTimer);
+    renderTimer = setTimeout(render, 150);
+  });
+  $textarea.on('scroll', syncScroll);
+
+  // 初始渲染
+  render();
 });
 </script>
 
